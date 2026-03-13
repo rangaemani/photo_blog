@@ -1,0 +1,4 @@
+# Environment files (may contain secrets)
+**/.env
+!frontend/photo_blog/.env
+__pycache__/

@@ -1,0 +1,119 @@
+:root {
+  --desktop-bg: #d4c9a8;
+  --menubar-bg: #f5f3ef;
+  --menubar-border: #d5d0c4;
+  --window-bg: #ffffff;
+  --window-border: #e0ddd5;
+  --window-titlebar-bg: #f5f3ef;
+  --window-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --dropdown-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --text-primary: #1d1f27;
+  --text-secondary: #555;
+  --text-muted: #888;
+  --accent: #3b82f6;
+  --accent-light: rgba(59, 130, 246, 0.3);
+  --status-bg: rgba(180, 170, 150, 0.9);
+  --status-border: #c4bca8;
+  --context-hover: #e8f0fe;
+  --close-hover: #e04040;
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+/* Desktop noise texture via SVG filter */
+.desktop-noise {
+  position: fixed;
+  inset: 0;
+  background-color: var(--desktop-bg);
+  z-index: 0;
+}
+
+.desktop-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  pointer-events: none;
+}
+
+/* Scrollbar styling for window bodies */
+.window-body::-webkit-scrollbar {
+  width: 8px;
+}
+.window-body::-webkit-scrollbar-track {
+  background: #f0ede6;
+}
+.window-body::-webkit-scrollbar-thumb {
+  background: #c4bca8;
+  border-radius: 4px;
+}
+.window-body::-webkit-scrollbar-thumb:hover {
+  background: #a89e88;
+}
+
+/* Window title-bar buttons */
+.win-btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #666;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease, transform 80ms ease;
+}
+.win-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #333;
+}
+.win-btn:active {
+  transform: scale(0.88);
+}
+.win-btn-close:hover {
+  background: var(--close-hover);
+  color: #fff;
+}
+
+/* Context menu items */
+.context-menu-item {
+  padding: 6px 16px;
+  font-size: 13px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background 80ms ease;
+}
+.context-menu-item:hover,
+.context-menu-item[data-focused="true"] {
+  background: var(--context-hover);
+}
+.context-menu-item[data-disabled="true"] {
+  color: #bbb;
+  cursor: default;
+}
+.context-menu-item[data-disabled="true"]:hover {
+  background: transparent;
+}
