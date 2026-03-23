@@ -4,6 +4,7 @@ django-cors-headers==4.9.0
 django-environ==0.13.0
 psycopg[binary]==3.3.3
 boto3==1.42.66
+blurhash==1.1.5
 pillow==12.1.1
 ExifRead==3.5.1
 resend==2.26.0
