@@ -187,7 +187,7 @@ export default function PhotoDetail({
 
   const metaPanel = (
     <div style={styles.meta}>
-      <h2 style={styles.title}>{photo.title}</h2>
+      <h2 style={styles.title}>{photo.title}.{photo.original_url.split('.').pop()}</h2>
       {photo.description && <p style={styles.description}>{photo.description}</p>}
       {!isWideMode && <ExifStrip photo={photo} />}
       {socialSection}
@@ -216,7 +216,7 @@ export default function PhotoDetail({
         <div style={styles.wide}>
           {framedPhoto}
           <div style={styles.sidePanel}>
-            <h2 style={styles.title}>{photo.title}</h2>
+            <h2 style={styles.title}>{photo.title}.{photo.original_url.split('.').pop()}</h2>
             {photo.description && <p style={styles.description}>{photo.description}</p>}
             {socialSection}
           </div>

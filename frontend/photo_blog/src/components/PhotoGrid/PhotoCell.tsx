@@ -135,7 +135,7 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
         />
       </div>
       <div style={styles.info}>
-        <div style={styles.title}>{photo.title}</div>
+        <div style={styles.title}>{photo.title}</div> { /* TODO: add file type suffix */ }
         {photo.taken_at && (
           <div style={styles.date}>{formatDate(photo.taken_at)}</div>
         )}
