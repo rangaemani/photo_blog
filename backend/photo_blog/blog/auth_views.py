@@ -40,6 +40,12 @@ class LogoutView(View):
         return JsonResponse({'ok': True})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class CsrfTokenView(View):
+    def get(self, request):
+        return JsonResponse({'csrfToken': get_token(request)})
+
+
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class UserView(View):
     def get(self, request):

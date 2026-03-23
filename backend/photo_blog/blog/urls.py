@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .auth_views import LoginView, LogoutView, UserView
+from .auth_views import LoginView, LogoutView, UserView, CsrfTokenView
 from .layout_views import LayoutCreateView, LayoutRetrieveView
 from .interaction_views import ToggleReactionView, CommentListCreateView, CommentDeleteView, TagAddView, TagRemoveView, PopTagAddView, PopTagRemoveView
 from .otp_views import OTPRequestView, OTPVerifyView, OTPSetNameView
@@ -23,6 +23,7 @@ router.register(r'photos', PhotoListView, basename='photo')
 router.register(r'categories', CategoryviewSet, basename='category')
 
 urlpatterns = [
+    path('auth/csrf/', CsrfTokenView.as_view(), name='auth-csrf'),
     path('auth/login/', LoginView.as_view(), name='auth-login'),
     path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('auth/user/', UserView.as_view(), name='auth-user'),

@@ -21,7 +21,8 @@ export function useAuth(): AuthState {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    api.getUser()
+    api.initCsrf()
+      .then(() => api.getUser())
       .then((u) => setUser(u))
       .catch(() => setUser(null))
       .finally(() => setIsLoading(false));
@@ -44,6 +45,7 @@ export function useAuth(): AuthState {
   const verifyOtp = useCallback(async (identifier: string, code: string) => {
     const res = await api.verifyOtp(identifier, code);
     if (res.ok && res.user) {
+      await api.initCsrf();
       setUser(res.user);
     }
     return res;

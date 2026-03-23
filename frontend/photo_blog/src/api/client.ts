@@ -2,9 +2,22 @@ import type { PaginatedResponse, PhotoListItem, PhotoDetail, Category, TrashedPh
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1';
 
+let _csrfToken = '';
+
 function getCsrfToken(): string {
+  // Fall back to cookie for local dev (same-origin)
+  if (_csrfToken) return _csrfToken;
   const match = document.cookie.match(/csrftoken=([^;]+)/);
   return match?.[1] ?? '';
+}
+
+export async function initCsrf(): Promise<void> {
+  try {
+    const data = await fetchJSON<{ csrfToken: string }>(`${API_BASE}/auth/csrf/`);
+    _csrfToken = data.csrfToken;
+  } catch {
+    // ignore — cookie fallback will be used
+  }
 }
 
 async function fetchJSON<T>(url: string): Promise<T> {

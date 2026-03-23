@@ -228,7 +228,7 @@ class OTPVerifyView(View):
         })
 
 
-@method_decorator(ensure_csrf_cookie, name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
 class OTPSetNameView(View):
     """Set the display name for a newly created user.
 
