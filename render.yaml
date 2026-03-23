@@ -26,7 +26,7 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         value: "https://YOUR_SITE.pages.dev"
       - key: PYTHON_VERSION
-        value: "3.13"
+        value: "3.13.0"
       - key: R2_BASE_URL
         sync: false
       - key: R2_ENDPOINT_URL
