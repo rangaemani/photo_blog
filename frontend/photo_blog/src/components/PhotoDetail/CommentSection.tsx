@@ -218,7 +218,7 @@ const styles: Record<string, React.CSSProperties> = {
   postBtn: {
     fontSize: 13,
     fontWeight: 500,
-    padding: '6px 12px',
+    padding: '16px 16px',
     border: '1px solid var(--window-border)',
     borderRadius: 4,
     background: 'var(--window-titlebar-bg)',

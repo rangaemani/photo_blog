@@ -185,6 +185,16 @@ export default function PhotoDetail({
     </>
   );
 
+  const hasExif = Boolean(
+    photo.camera_make ||
+    photo.camera_model ||
+    photo.focal_length ||
+    photo.aperture ||
+    photo.shutter_speed ||
+    photo.iso ||
+    photo.taken_at
+  );
+
   const metaPanel = (
     <div style={styles.meta}>
       <h2 style={styles.title}>{photo.title}.{photo.original_url.split('.').pop()}</h2>
@@ -203,7 +213,7 @@ export default function PhotoDetail({
             {imageStack}
           </div>
           <ExifStrip photo={photo} padded />
-          <div style={{ height: 10 }} />
+          {hasExif ? <div style = {{height: 10}}/> : <div style={{ height: 26 }} />}
         </div>
       </div>
     </div>
