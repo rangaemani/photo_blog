@@ -1,5 +1,2 @@
-# Proxy API requests to backend (same-origin, no CORS/cookie issues)
-/api/*  https://photoblog-api.onrender.com/api/:splat  200
-
-# SPA catch-all (must be last)
-/*    /index.html    200
+# SPA catch-all
+/*    /index.html   200
