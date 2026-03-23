@@ -62,6 +62,8 @@ export interface PhotoDetail extends PhotoListItem {
   reaction_summary: Record<string, number>;
   user_reactions: string[];
   comment_count: number;
+  tags: TagItem[];
+  pop_tags: PopTagItem[];
 }
 
 export interface CommentItem {
@@ -69,6 +71,20 @@ export interface CommentItem {
   text: string;
   display_name: string;
   created_at: string;
+}
+
+export interface TagItem {
+  id: string;
+  text: string;
+  user__username: string;
+}
+
+export interface PopTagItem {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  user__username: string;
 }
 
 export interface ToggleReactionResponse {

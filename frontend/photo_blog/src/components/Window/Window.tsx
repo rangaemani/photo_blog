@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { WindowState, ResizeEdge } from '../../types';
 import { useDraggable } from '../../hooks/useDraggable';
@@ -8,6 +8,7 @@ import WindowTitleBar from './WindowTitleBar';
 
 interface Props {
   win: WindowState;
+  isFocused?: boolean;
   onClose: () => void;
   onMinimize: () => void;
   onMaximize: () => void;
@@ -21,6 +22,15 @@ interface Props {
 
 const EDGE_SIZE = 6;
 
+const MIN_SIZES: Record<string, { width: number; height: number }> = {
+  grid:   { width: 360, height: 300 },
+  detail: { width: 420, height: 380 },
+  static: { width: 320, height: 280 },
+  login:  { width: 320, height: 280 },
+  upload: { width: 400, height: 360 },
+  trash:  { width: 360, height: 300 },
+};
+
 const RESIZE_EDGES: { edge: ResizeEdge; style: React.CSSProperties }[] = [
   { edge: 'e',  style: { top: 0, right: 0, width: EDGE_SIZE, height: '100%', cursor: 'ew-resize' } },
   { edge: 'w',  style: { top: 0, left: 0, width: EDGE_SIZE, height: '100%', cursor: 'ew-resize' } },
@@ -32,19 +42,16 @@ const RESIZE_EDGES: { edge: ResizeEdge; style: React.CSSProperties }[] = [
   { edge: 'nw', style: { top: 0, left: 0, width: EDGE_SIZE * 2, height: EDGE_SIZE * 2, cursor: 'nwse-resize' } },
 ];
 
-export default function Window({ win, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, children, toolbar, dropZoneId }: Props) {
+export default function Window({ win, isFocused = false, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, children, toolbar, dropZoneId }: Props) {
   // Track whether user is actively dragging/resizing — bypass spring during those operations
   const [isInteracting, setIsInteracting] = useState(false);
-  const interactingRef = useRef(false);
 
   const startInteract = useCallback(() => {
-    interactingRef.current = true;
     setIsInteracting(true);
     onFocus();
   }, [onFocus]);
 
   const endInteract = useCallback(() => {
-    interactingRef.current = false;
     setIsInteracting(false);
   }, []);
 
@@ -54,10 +61,14 @@ export default function Window({ win, onClose, onMinimize, onMaximize, onFocus, 
     onDragEnd: endInteract,
   });
 
+  const minSize = MIN_SIZES[win.windowType] ?? { width: 320, height: 280 };
+
   const { onEdgeMouseDown } = useResizable({
     onResize,
     onResizeStart: startInteract,
     onResizeEnd: endInteract,
+    minWidth: minSize.width,
+    minHeight: minSize.height,
   });
 
   // Register window body as a drop zone when dropZoneId is provided
@@ -71,9 +82,8 @@ export default function Window({ win, onClose, onMinimize, onMaximize, onFocus, 
     onEdgeMouseDown(e, edge, win.size.width, win.size.height, win.position.x, win.position.y);
   }, [onEdgeMouseDown, win.size.width, win.size.height, win.position.x, win.position.y]);
 
-  // Focus shadow: deeper when focused (highest zIndex among visible windows)
-  const isFocused = !win.isMinimized;
-  const shadow = isFocused
+  // Focus shadow: deeper when this is the front-most visible window
+  const shadow = isFocused && !win.isMinimized
     ? '0 8px 30px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)'
     : '0 2px 8px rgba(0,0,0,0.06)';
 

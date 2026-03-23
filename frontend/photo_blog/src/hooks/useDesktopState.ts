@@ -176,7 +176,9 @@ export function useDesktopState(categories: Category[], isAdmin: boolean) {
   }, [icons, storageKey]);
 
   useEffect(() => {
-    if (initialized.current && icons.length > 0) persistAll();
+    if (!initialized.current || icons.length === 0) return;
+    const timer = setTimeout(persistAll, 300);
+    return () => clearTimeout(timer);
   }, [icons, persistAll]);
 
   const moveIcon = useCallback((id: string, x: number, y: number) => {
@@ -249,12 +251,13 @@ export function useDesktopState(categories: Category[], isAdmin: boolean) {
     const folders: Record<string, PhotoRef[]> = {};
     for (const [k, v] of folderContentsRef.current) folders[k] = v;
     const blob: DesktopBlob = { version: 1, icons, folders };
-    return btoa(JSON.stringify(blob));
+    // btoa only handles Latin-1; encode via UTF-8 first to support Unicode in labels/titles
+    return btoa(encodeURIComponent(JSON.stringify(blob)).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
   }, [icons]);
 
   const importBlob = useCallback((base64: string) => {
     try {
-      const blob: DesktopBlob = JSON.parse(atob(base64));
+      const blob: DesktopBlob = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
       if (blob.version !== 1 || !Array.isArray(blob.icons)) return false;
       setIcons(blob.icons);
       const map = new Map<string, PhotoRef[]>();

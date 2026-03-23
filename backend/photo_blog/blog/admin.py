@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 
-from .models import Category, Photo, Reaction, Comment
+from .models import Category, Photo, PopTag, Reaction, Comment, Tag
 from .pipeline import PipelineError, process_upload
 
 
@@ -83,3 +83,15 @@ class ReactionAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('user', 'photo', 'text', 'created_at')
     search_fields = ('text',)
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('text', 'user', 'photo', 'created_at')
+    search_fields = ('text',)
+
+
+@admin.register(PopTag)
+class PopTagAdmin(admin.ModelAdmin):
+    list_display = ('label', 'user', 'photo', 'x', 'y', 'created_at')
+    search_fields = ('label',)

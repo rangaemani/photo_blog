@@ -225,22 +225,3 @@ Log in via the desktop login window using the superuser credentials you created.
 
 ---
 
-## Key decisions & tradeoffs
-
-| Decision | Reasoning |
-|---|---|
-| Windowed desktop UI instead of a page-based SPA | It's a personal project — the OS metaphor is the point |
-| Session auth over JWTs | Simpler for a solo admin; no token refresh complexity |
-| Soft delete (trash) before purge | Matches OS trash can metaphor; prevents accidental permanent deletion |
-| In-memory photo cache | No external state library needed; cache invalidation is simple (upload/trash) |
-| Blurhash placeholders | Better loading UX than gray boxes; generated server-side so no client cost |
-| R2 over S3 | Zero egress fees for public reads |
-
----
-
-## Known limitations / future work
-
-- **Window content scaling**: Content inside resized windows (especially PhotoDetail) uses viewport-relative units rather than window-relative ones. Continuous drag-resize causes some reflow. Tracked for future improvement.
-- **Auth**: Current MVP is admin-only session auth. Planned: passwordless OTP (phone/email) for all users.
-- **No test suite**: No automated tests exist yet.
-- **Single `App.tsx`**: Window open/render logic is all in one large file. Candidate for splitting into separate window controller hooks as complexity grows.

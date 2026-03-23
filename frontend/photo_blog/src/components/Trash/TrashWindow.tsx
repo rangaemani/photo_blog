@@ -34,28 +34,34 @@ export default function TrashWindow({ onChanged }: Props) {
 
   const handleRestore = useCallback(async () => {
     if (selection.selectedCount === 0) return;
-    await restorePhotos(selection.selectedIds);
-    selection.clear();
-    loadTrash();
-    onChanged();
+    try {
+      await restorePhotos(selection.selectedIds);
+      selection.clear();
+      loadTrash();
+      onChanged();
+    } catch { /* TODO: show error toast */ }
   }, [selection, loadTrash, onChanged]);
 
   const handlePurge = useCallback(async () => {
-    await purgePhotos(selection.selectedIds);
-    sound.play('dropTrash');
-    selection.clear();
-    setConfirm(null);
-    loadTrash();
-    onChanged();
+    try {
+      await purgePhotos(selection.selectedIds);
+      sound.play('dropTrash');
+      selection.clear();
+      setConfirm(null);
+      loadTrash();
+      onChanged();
+    } catch { /* TODO: show error toast */ }
   }, [selection, loadTrash, onChanged, sound]);
 
   const handleEmpty = useCallback(async () => {
-    await emptyTrash();
-    sound.play('emptyTrash');
-    selection.clear();
-    setConfirm(null);
-    loadTrash();
-    onChanged();
+    try {
+      await emptyTrash();
+      sound.play('emptyTrash');
+      selection.clear();
+      setConfirm(null);
+      loadTrash();
+      onChanged();
+    } catch { /* TODO: show error toast */ }
   }, [selection, loadTrash, onChanged, sound]);
 
   if (isLoading) {

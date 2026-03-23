@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\(sk_[a-zA-Z0-9]+|re_[a-zA-Z0-9]+|pk_[a-zA-Z0-9]+|token|password|secret\\)\" /c/Users/srira/Documents/cs/web/photo_blog/.env*)",
+      "Bash(find /c/Users/srira/Documents/cs/web/photo_blog -type f \\\\\\(-name *.py -o -name *.ts -o -name *.tsx \\\\\\) ! -path *node_modules* ! -path *.venv* ! -path *__pycache__* -exec grep -E \"r2\\\\.dev|r2\\\\.cloudflarestorage|[a-zA-Z0-9]{32,}\" {} +)",
+      "Bash(grep -E \"^[^:]+:\\(.*\\)\\(r2\\\\.|cloudflarestorage|[a-zA-Z0-9]{32,}\\)\")"
+    ]
+  }
+}

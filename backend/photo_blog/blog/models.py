@@ -85,6 +85,41 @@ class OTPRequest(models.Model):
         return f'OTP for {self.identifier} ({self.identifier_type})'
 
 
+# === Tags ===
+
+class Tag(models.Model):
+    """A user-contributed tag on a photo. Unique text per photo."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    photo = models.ForeignKey('Photo', on_delete=models.CASCADE, related_name='tags')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='tags')
+    text = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('photo', 'text')]
+        indexes = [models.Index(fields=['photo'])]
+
+    def __str__(self):
+        return f'#{self.text} on {self.photo}'
+
+
+class PopTag(models.Model):
+    """A positioned label on a photo (like Instagram's person tags)."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    photo = models.ForeignKey('Photo', on_delete=models.CASCADE, related_name='pop_tags')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='pop_tags')
+    label = models.CharField(max_length=50)
+    x = models.FloatField()  # 0-1, percentage from left
+    y = models.FloatField()  # 0-1, percentage from top
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['photo'])]
+
+    def __str__(self):
+        return f'"{self.label}" at ({self.x:.2f}, {self.y:.2f}) on {self.photo}'
+
+
 # === Interactions ===
 
 class Reaction(models.Model):

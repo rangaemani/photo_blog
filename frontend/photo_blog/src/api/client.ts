@@ -1,4 +1,4 @@
-import type { PaginatedResponse, PhotoListItem, PhotoDetail, Category, TrashedPhotoListItem, User, OTPRequestResponse, OTPVerifyResponse, CommentItem, ToggleReactionResponse } from '../types';
+import type { PaginatedResponse, PhotoListItem, PhotoDetail, Category, TrashedPhotoListItem, User, OTPRequestResponse, OTPVerifyResponse, CommentItem, ToggleReactionResponse, TagItem, PopTagItem } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1';
 
@@ -136,7 +136,7 @@ async function deleteJSON<T>(url: string): Promise<T> {
     },
   });
   if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
+  return (res.status === 204 ? Promise.resolve({} as T) : res.json() as Promise<T>);
 }
 
 async function patchJSON<T>(url: string, body: unknown): Promise<T> {
@@ -286,6 +286,26 @@ export function postComment(slug: string, text: string): Promise<CommentItem> {
 
 export function deleteComment(slug: string, commentId: string): Promise<{ ok: boolean }> {
   return deleteJSON(`${API_BASE}/photos/${slug}/comments/${commentId}/`);
+}
+
+// === Tags ===
+
+export function addTag(slug: string, text: string): Promise<{ tags: TagItem[] }> {
+  return postJSON(`${API_BASE}/photos/${slug}/tags/`, { text });
+}
+
+export function removeTag(slug: string, tagId: string): Promise<{ tags: TagItem[] }> {
+  return deleteJSON(`${API_BASE}/photos/${slug}/tags/${tagId}/`);
+}
+
+// === Pop Tags ===
+
+export function addPopTag(slug: string, label: string, x: number, y: number): Promise<{ pop_tags: PopTagItem[] }> {
+  return postJSON(`${API_BASE}/photos/${slug}/pop-tags/`, { label, x, y });
+}
+
+export function removePopTag(slug: string, tagId: string): Promise<{ pop_tags: PopTagItem[] }> {
+  return deleteJSON(`${API_BASE}/photos/${slug}/pop-tags/${tagId}/`);
 }
 
 // === Shared Layouts ===

@@ -50,7 +50,13 @@ export default function CommentSection({
     }
   }, [photoSlug]);
 
-  // Load comments when section first appears
+  // Reset when photo changes
+  useEffect(() => {
+    setLoaded(false);
+    setComments([]);
+  }, [photoSlug]);
+
+  // Load comments when section first appears (or after reset)
   useEffect(() => {
     if (!loaded) loadComments();
   }, [loaded, loadComments]);
@@ -210,14 +216,14 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#fff',
   },
   postBtn: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 500,
-    padding: '6px 14px',
+    padding: '6px 12px',
     border: '1px solid var(--window-border)',
     borderRadius: 4,
     background: 'var(--window-titlebar-bg)',
     cursor: 'pointer',
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-end',    
   },
   signInLink: {
     fontSize: 12,

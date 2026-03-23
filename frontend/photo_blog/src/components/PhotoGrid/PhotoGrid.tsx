@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { GridPayload, ContextMenuState } from '../../types';
 import PhotoCell from './PhotoCell';
@@ -23,6 +23,9 @@ interface Props {
 export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onHover, onHoverEnd, onContextMenu, selectable, isSelected, onToggleSelect, onRangeSelect, onTrashed, isDraggable, sourceWindowId }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const orderedIds = useMemo(() => grid.photos.map(p => p.id), [grid.photos]);
+  const handleRangeSelect = useCallback((id: string) => {
+    onRangeSelect?.(id, orderedIds);
+  }, [onRangeSelect, orderedIds]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -75,7 +78,7 @@ export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onH
             selectable={selectable}
             selected={isSelected?.(photo.id)}
             onToggleSelect={onToggleSelect}
-            onRangeSelect={onRangeSelect ? (id) => onRangeSelect(id, orderedIds) : undefined}
+            onRangeSelect={onRangeSelect ? handleRangeSelect : undefined}
             onTrashed={onTrashed}
             isDraggable={isDraggable}
             sourceWindowId={sourceWindowId}

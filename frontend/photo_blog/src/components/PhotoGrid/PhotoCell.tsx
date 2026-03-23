@@ -61,7 +61,7 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
       { label: '', divider: true, visible: selectable },
       {
         label: 'Move to Trash',
-        action: () => { trashPhotos([photo.id]).then(() => onTrashed?.()); },
+        action: () => { trashPhotos([photo.id]).then(() => onTrashed?.()).catch(() => {}); },
         visible: selectable,
       },
     ];

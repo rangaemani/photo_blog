@@ -1,1 +1,5 @@
+# Proxy API requests to backend (same-origin, no CORS/cookie issues)
+/api/*  https://YOUR_RENDER_APP.onrender.com/api/:splat  200
+
+# SPA catch-all (must be last)
 /*    /index.html    200

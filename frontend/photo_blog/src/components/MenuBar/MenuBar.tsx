@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { Category } from '../../types';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -30,6 +30,9 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
     return () => clearInterval(id);
   }, []);
 
+  const { isAuthenticated, logout } = useAuthContext();
+  const sound = useSoundContext();
+
   const toggleMenu = (name: string) => {
     setOpenMenu(prev => {
       const next = prev === name ? null : name;
@@ -40,12 +43,9 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
 
   const closeMenu = () => setOpenMenu(null);
 
-  const { isAuthenticated, logout } = useAuthContext();
-  const sound = useSoundContext();
-
   const ctrlKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+';
 
-  const menus: Record<string, { label: string; action?: () => void; divider?: boolean; disabled?: boolean; external?: boolean; shortcut?: string }[]> = {
+  const menus = useMemo<Record<string, { label: string; action?: () => void; divider?: boolean; disabled?: boolean; external?: boolean; shortcut?: string }[]>>(() => ({
     File: [
       { label: 'New Window', action: onOpenAllPhotos, shortcut: `${ctrlKey}N` },
       { label: 'Close Window', shortcut: `${ctrlKey}W`, disabled: true },
@@ -82,7 +82,7 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
       { label: 'Share', action: () => onOpenStatic('share') },
       { label: 'GitHub', action: () => window.open('https://github.com/rangaemani', '_blank'), external: true },
     ],
-  };
+  }), [categories, isAuthenticated, logout, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onResetDesktop, ctrlKey]);
 
   return (
     <div style={styles.bar}>
@@ -155,7 +155,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     cursor: 'pointer',
     fontSize: 13,
-    color: '#333',
+    color: 'var(--text-primary)',
     padding: '2px 10px',
     borderRadius: 4,
   },
@@ -169,7 +169,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   clock: {
     fontSize: 12,
-    color: '#555',
+    color: 'var(--text-secondary)',
     fontFamily: 'ui-monospace, monospace',
   },
 };

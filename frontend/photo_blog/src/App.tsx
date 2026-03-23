@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { ActiveDrag, Category, DesktopIconState, ContextMenuState, WindowState, PhotoRef, PhotoListItem } from './types';
 import { getCategories, createCategory, deleteCategory, trashPhotos, patchPhotoCategory, getSharedLayout } from './api/client';
@@ -46,7 +46,7 @@ function AppInner() {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [gridColumns, setGridColumns] = useState(3);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const toastIdRef = { current: 0 };
+  const toastIdRef = useRef(0);
 
   const showToast = useCallback((text: string, type: ToastMessage['type'] = 'info') => {
     const id = ++toastIdRef.current;
@@ -60,7 +60,8 @@ function AppInner() {
   const wm = useWindowManager();
   const photos = usePhotos();
   const selection = useSelection();
-  const { isAuthenticated } = useAuthContext();
+  const auth = useAuthContext();
+  const { isAuthenticated } = auth;
   const desktop = useDesktopState(categories, isAuthenticated);
   const sound = useSoundContext();
 
@@ -96,7 +97,7 @@ function AppInner() {
     });
   // Only run once when categories are ready
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categories.length > 0]);
+  }, [categories.length]);
 
   // === Window open helpers ===
 
@@ -456,7 +457,6 @@ function AppInner() {
 
       try {
         const result = await deleteCategory(slug);
-        console.log('[App] deleteCategory result:', result);
 
         // Remove the folder icon
         desktop.removeIcon(id);
@@ -586,7 +586,10 @@ function AppInner() {
             selectable={isAuthenticated}
             onTrashed={() => refreshOpenWindows()}
             isAuthenticated={isAuthenticated}
+            currentUsername={auth.user?.username}
             onLoginPrompt={openLoginWindow}
+            windowWidth={win.size.width}
+            windowHeight={win.size.height}
           />
         );
       case 'static':
@@ -681,22 +684,26 @@ function AppInner() {
         onContextMenu={setContextMenu}
       >
         <AnimatePresence>
-          {wm.windows.map(win => (
-            <Window
-              key={win.id}
-              win={win}
-              onClose={() => { sound.play('windowClose'); wm.closeWindow(win.id); }}
-              onMinimize={() => { sound.play('windowMinimize'); wm.minimizeWindow(win.id); }}
-              onMaximize={() => { sound.play('windowMaximize'); wm.maximizeWindow(win.id); }}
-              onFocus={() => wm.focusWindow(win.id)}
-              onMove={(x, y) => wm.moveWindow(win.id, x, y)}
-              onResize={(w, h, x, y) => wm.resizeWindow(win.id, w, h, x, y)}
-              toolbar={renderToolbar(win)}
-              dropZoneId={getWindowDropZoneId(win)}
-            >
-              {renderWindowContent(win)}
-            </Window>
-          ))}
+          {(() => {
+            const maxZ = wm.windows.filter(w => !w.isMinimized).reduce((m, w) => Math.max(m, w.zIndex), 0);
+            return wm.windows.map(win => (
+              <Window
+                key={win.id}
+                win={win}
+                isFocused={!win.isMinimized && win.zIndex === maxZ}
+                onClose={() => { sound.play('windowClose'); wm.closeWindow(win.id); }}
+                onMinimize={() => { sound.play('windowMinimize'); wm.minimizeWindow(win.id); }}
+                onMaximize={() => { sound.play('windowMaximize'); wm.maximizeWindow(win.id); }}
+                onFocus={() => wm.focusWindow(win.id)}
+                onMove={(x, y) => wm.moveWindow(win.id, x, y)}
+                onResize={(w, h, x, y) => wm.resizeWindow(win.id, w, h, x, y)}
+                toolbar={renderToolbar(win)}
+                dropZoneId={getWindowDropZoneId(win)}
+              >
+                {renderWindowContent(win)}
+              </Window>
+            ));
+          })()}
         </AnimatePresence>
       </Desktop>
       <StatusBar

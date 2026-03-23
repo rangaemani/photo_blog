@@ -1,5 +1,16 @@
 # Environment files (may contain secrets)
 **/.env
-!frontend/photo_blog/.env
+!**/.env.example
+
+# Python
 __pycache__/
+*.pyc
 *.sqlite3
+staticfiles/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

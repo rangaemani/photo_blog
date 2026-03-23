@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from django.conf import settings
 from django.db.models import Count
-from .models import Category, Photo, Comment, UserProfile
+from .models import Category, Photo, Comment, PopTag, Tag, UserProfile
 
 class CategorySerializer(serializers.ModelSerializer):
     photo_count = serializers.IntegerField(read_only=True)
@@ -27,12 +27,14 @@ class PhotoDetailSerializer(PhotoListSerializer):
     reaction_summary = serializers.SerializerMethodField()
     user_reactions = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+    pop_tags = serializers.SerializerMethodField()
 
     class Meta(PhotoListSerializer.Meta):
         fields = PhotoListSerializer.Meta.fields + [
             'original_url', 'description', 'camera_make', 'camera_model',
             'lens', 'focal_length', 'aperture', 'iso', 'shutter_speed', 'file_size',
-            'reaction_summary', 'user_reactions', 'comment_count',
+            'reaction_summary', 'user_reactions', 'comment_count', 'tags', 'pop_tags',
         ]
 
     def get_original_url(self, obj: Photo) -> str:
@@ -53,6 +55,12 @@ class PhotoDetailSerializer(PhotoListSerializer):
 
     def get_comment_count(self, obj: Photo) -> int:
         return obj.comments.count()
+
+    def get_tags(self, obj: Photo) -> list[dict]:
+        return list(obj.tags.values('id', 'text', 'user__username').order_by('created_at'))
+
+    def get_pop_tags(self, obj: Photo) -> list[dict]:
+        return list(obj.pop_tags.values('id', 'label', 'x', 'y', 'user__username').order_by('created_at'))
 
 
 class TrashedPhotoSerializer(PhotoListSerializer):

@@ -17,7 +17,9 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onCancel();
-    if (e.key === 'Enter') onConfirm();
+    // Guard Enter: if the confirm button already has focus the native click fires it,
+    // so only handle Enter from the global listener when another element has focus.
+    if (e.key === 'Enter' && document.activeElement !== confirmRef.current) onConfirm();
   }, [onConfirm, onCancel]);
 
   useEffect(() => {

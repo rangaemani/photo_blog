@@ -19,8 +19,14 @@ const DEFAULT_SIZES: Record<WindowContentType, { width: number; height: number }
   trash: { width: 800, height: 560 },
 };
 
-const MIN_WIDTH = 320;
-const MIN_HEIGHT = 280;
+const MIN_SIZES: Record<WindowContentType, { width: number; height: number }> = {
+  grid:   { width: 360, height: 300 },
+  detail: { width: 420, height: 380 },
+  static: { width: 320, height: 280 },
+  login:  { width: 320, height: 280 },
+  upload: { width: 400, height: 360 },
+  trash:  { width: 360, height: 300 },
+};
 
 interface WindowPayload {
   gridPayload?: GridPayload;
@@ -73,6 +79,9 @@ export function useWindowManager() {
   }, []);
 
   const maximizeWindow = useCallback((id: string) => {
+    // Read viewport dimensions outside the updater (safe for Concurrent Mode)
+    const vpWidth = window.innerWidth;
+    const vpHeight = window.innerHeight;
     setWindows(prev => prev.map(w => {
       if (w.id !== id) return w;
       if (w.isMaximized) {
@@ -94,8 +103,8 @@ export function useWindowManager() {
         preMaximizeRect: { ...w.position, ...w.size },
         position: { x: 0, y: MENU_BAR_HEIGHT },
         size: {
-          width: window.innerWidth,
-          height: window.innerHeight - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT,
+          width: vpWidth,
+          height: vpHeight - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT,
         },
       };
     }));
@@ -108,16 +117,16 @@ export function useWindowManager() {
   }, []);
 
   const resizeWindow = useCallback((id: string, width: number, height: number, x?: number, y?: number) => {
-    setWindows(prev => prev.map(w =>
-      w.id === id
-        ? {
-            ...w,
-            size: { width: Math.max(MIN_WIDTH, width), height: Math.max(MIN_HEIGHT, height) },
-            ...(x !== undefined && y !== undefined ? { position: { x, y } } : {}),
-            isMaximized: false,
-          }
-        : w,
-    ));
+    setWindows(prev => prev.map(w => {
+      if (w.id !== id) return w;
+      const min = MIN_SIZES[w.windowType];
+      return {
+        ...w,
+        size: { width: Math.max(min.width, width), height: Math.max(min.height, height) },
+        ...(x !== undefined && y !== undefined ? { position: { x, y } } : {}),
+        isMaximized: false,
+      };
+    }));
   }, []);
 
   const updateWindow = useCallback((id: string, updates: Partial<WindowState>) => {

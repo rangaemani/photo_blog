@@ -57,7 +57,7 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     textAlign: 'center' as const,
     fontSize: 13,
-    color: '#333',
+    color: 'var(--text-primary)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,

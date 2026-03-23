@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Category, UploadFileEntry } from '../../types';
 import { uploadPhoto } from '../../api/client';
@@ -19,6 +19,16 @@ export default function UploadWindow({ categories, onUploaded }: Props) {
   const sound = useSoundContext();
 
   const defaultCategory = categories[0]?.slug ?? '';
+
+  // Revoke all object URLs when the window unmounts to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      setFiles(prev => {
+        prev.forEach(f => URL.revokeObjectURL(f.preview));
+        return prev;
+      });
+    };
+  }, []);
 
   const addFiles = useCallback((fileList: FileList) => {
     const entries: UploadFileEntry[] = Array.from(fileList)
@@ -57,6 +67,7 @@ export default function UploadWindow({ categories, onUploaded }: Props) {
   const handleUploadAll = useCallback(async () => {
     setIsUploading(true);
     const pending = files.filter(f => f.status === 'pending');
+    let successCount = 0;
 
     for (const entry of pending) {
       updateFile(entry.id, { status: 'uploading', progress: 0 });
@@ -70,6 +81,7 @@ export default function UploadWindow({ categories, onUploaded }: Props) {
         );
         updateFile(entry.id, { status: 'done', progress: 100 });
         sound.play('uploadComplete');
+        successCount++;
       } catch (err) {
         updateFile(entry.id, {
           status: 'error',
@@ -80,7 +92,7 @@ export default function UploadWindow({ categories, onUploaded }: Props) {
     }
 
     setIsUploading(false);
-    onUploaded();
+    if (successCount > 0) onUploaded();
   }, [files, updateFile, onUploaded, sound]);
 
   const pendingCount = files.filter(f => f.status === 'pending').length;

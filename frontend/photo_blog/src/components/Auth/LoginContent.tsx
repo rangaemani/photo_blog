@@ -95,6 +95,13 @@ export default function LoginContent({ onSuccess }: Props) {
     }
   }, [auth, identifier, onSuccess]);
 
+  // Auto-submit when all 6 digits are filled
+  useEffect(() => {
+    if (mode === 'otp-code' && otpCode.every(d => d !== '') && !isSubmitting) {
+      submitOtpCode(otpCode.join(''));
+    }
+  }, [otpCode, mode, isSubmitting, submitOtpCode]);
+
   const handleDigitChange = useCallback((index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
     if (value && !/^\d$/.test(value)) return;
@@ -102,12 +109,6 @@ export default function LoginContent({ onSuccess }: Props) {
     setOtpCode(prev => {
       const next = [...prev];
       next[index] = value;
-
-      // Auto-submit when all 6 digits filled
-      if (value && next.every(d => d !== '')) {
-        setTimeout(() => submitOtpCode(next.join('')), 0);
-      }
-
       return next;
     });
 
@@ -115,7 +116,7 @@ export default function LoginContent({ onSuccess }: Props) {
     if (value && index < 5) {
       digitRefs.current[index + 1]?.focus();
     }
-  }, [submitOtpCode]);
+  }, []);
 
   const handleDigitKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
     if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
@@ -133,14 +134,11 @@ export default function LoginContent({ onSuccess }: Props) {
     setOtpCode(prev => {
       const next = [...prev];
       digits.forEach((d, i) => { next[i] = d; });
-      if (next.every(d => d !== '')) {
-        setTimeout(() => submitOtpCode(next.join('')), 0);
-      }
       return next;
     });
     const focusIdx = Math.min(digits.length, 5);
     digitRefs.current[focusIdx]?.focus();
-  }, [submitOtpCode]);
+  }, []);
 
   const handleSetName = async (e: React.FormEvent) => {
     e.preventDefault();
