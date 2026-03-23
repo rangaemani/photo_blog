@@ -13,4 +13,7 @@ node_modules/
 
 # OS
 .DS_Store
+
+# DB stuff
 Thumbs.db
+backend/photo_blog/prod_dump.pgdump
