@@ -253,6 +253,7 @@ function AppInner() {
 
   const refreshOpenWindows = useCallback(async () => {
     photos.invalidateAll();
+    getCategories().then(setCategories).catch(() => {});
     for (const win of wm.windows) {
       if (win.windowType === 'grid') {
         const slug = win.gridPayload?.categorySlug ?? null;
