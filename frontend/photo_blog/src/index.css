@@ -1,21 +1,65 @@
 :root {
-  --desktop-bg: #d4c9a8;
-  --menubar-bg: #f5f3ef;
-  --menubar-border: #d5d0c4;
-  --window-bg: #ffffff;
-  --window-border: #e0ddd5;
-  --window-titlebar-bg: #f5f3ef;
-  --window-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --dropdown-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  --text-primary: #1d1f27;
-  --text-secondary: #555;
-  --text-muted: #888;
-  --accent: #3b82f6;
-  --accent-light: rgba(59, 130, 246, 0.3);
-  --status-bg: rgba(180, 170, 150, 0.9);
-  --status-border: #c4bca8;
-  --context-hover: #e8f0fe;
-  --close-hover: #e04040;
+  /* Base Palette */
+  --bright-snow: #f8f9fa;
+  --platinum: #e9ecef;
+  --alabaster-grey: #dee2e6;
+  --pale-slate: #ced4da;
+  --pale-slate-2: #adb5bd;
+  --slate-grey: #6c757d;
+  --iron-grey: #495057;
+  --gunmetal: #343a40;
+  --carbon-black: #212529;
+
+  /* Semantic Mappings */
+  --desktop-bg: var(--pale-slate);
+  --menubar-bg: var(--platinum);
+  --menubar-border: var(--pale-slate-2);
+  --window-bg: var(--platinum);
+  --window-border: var(--pale-slate-2);
+  --window-titlebar-bg: var(--pale-slate);
+  --window-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  --dropdown-shadow: 2px 2px 4px rgba(0, 0, 0, 0.35);
+  --text-primary: var(--carbon-black);
+  --text-secondary: var(--iron-grey);
+  --text-muted: var(--slate-grey);
+  --accent: #4a7fcb;
+  --accent-light: rgba(74, 127, 203, 0.25);
+  --status-bg: var(--pale-slate);
+  --status-border: var(--pale-slate-2);
+  --context-hover: var(--accent);
+  --close-hover: #c03030;
+
+  /* Bevel System */
+  --bevel-highlight: var(--bright-snow);
+  --bevel-light: var(--alabaster-grey);
+  --bevel-shadow: var(--slate-grey);
+  --bevel-dark: var(--iron-grey);
+
+  /* Groove/Ridge */
+  --groove-light: var(--bright-snow);
+  --groove-dark: var(--pale-slate-2);
+
+  /* Sunken Inset */
+  --inset-bg: var(--bright-snow);
+
+  /* Toolbar/Panel */
+  --toolbar-bg: var(--platinum);
+  --panel-bg: var(--alabaster-grey);
+}
+
+/* Pixel fonts */
+@font-face {
+  font-family: 'PixeAn';
+  src: url('./assets/fonts/pixe_an.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'CyberH';
+  src: url('./assets/fonts/cyber_h.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
 *, *::before, *::after {
@@ -24,12 +68,19 @@
   box-sizing: border-box;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 13px;
+  font-family: 'PixeAn', 'MS Sans Serif', sans-serif;
+  font-size: 12px;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
   color: var(--text-primary);
   user-select: none;
 }
@@ -46,7 +97,7 @@ html, body, #root {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.06;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 200px 200px;
@@ -55,41 +106,53 @@ html, body, #root {
 
 /* Scrollbar styling for window bodies */
 .window-body::-webkit-scrollbar {
-  width: 8px;
+  width: 14px;
 }
 .window-body::-webkit-scrollbar-track {
-  background: #f0ede6;
+  background: var(--platinum);
+  border-left: 1px solid var(--groove-dark);
 }
 .window-body::-webkit-scrollbar-thumb {
-  background: #c4bca8;
-  border-radius: 4px;
+  background: var(--pale-slate);
+  border-top: 2px solid var(--bevel-highlight);
+  border-left: 2px solid var(--bevel-highlight);
+  border-bottom: 2px solid var(--bevel-shadow);
+  border-right: 2px solid var(--bevel-shadow);
+  border-radius: 0;
 }
 .window-body::-webkit-scrollbar-thumb:hover {
-  background: #a89e88;
+  background: var(--pale-slate-2);
 }
 
 /* Window title-bar buttons */
 .win-btn {
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #666;
-  font-size: 11px;
+  width: 18px;
+  height: 18px;
+  border-top: 2px solid var(--bevel-highlight);
+  border-left: 2px solid var(--bevel-highlight);
+  border-bottom: 2px solid var(--bevel-shadow);
+  border-right: 2px solid var(--bevel-shadow);
+  border-radius: 0;
+  background: var(--pale-slate);
+  color: var(--carbon-black);
+  font-size: 10px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 120ms ease, color 120ms ease, transform 80ms ease;
+  transition: none;
 }
 .win-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #333;
+  background: var(--alabaster-grey);
+  color: var(--carbon-black);
 }
 .win-btn:active {
-  transform: scale(0.88);
+  border-top: 2px solid var(--bevel-shadow);
+  border-left: 2px solid var(--bevel-shadow);
+  border-bottom: 2px solid var(--bevel-highlight);
+  border-right: 2px solid var(--bevel-highlight);
 }
 .win-btn-close:hover {
   background: var(--close-hover);
@@ -98,22 +161,24 @@ html, body, #root {
 
 /* Context menu items */
 .context-menu-item {
-  padding: 6px 16px;
+  padding: 4px 16px;
   font-size: 13px;
-  height: 28px;
+  height: 24px;
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: background 80ms ease;
+  transition: none;
 }
 .context-menu-item:hover,
 .context-menu-item[data-focused="true"] {
-  background: var(--context-hover);
+  background: var(--accent);
+  color: var(--bright-snow);
 }
 .context-menu-item[data-disabled="true"] {
-  color: #bbb;
+  color: var(--pale-slate-2);
   cursor: default;
 }
 .context-menu-item[data-disabled="true"]:hover {
   background: transparent;
+  color: var(--pale-slate-2);
 }

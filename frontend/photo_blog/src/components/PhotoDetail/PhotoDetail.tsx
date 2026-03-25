@@ -19,7 +19,7 @@ import { trashPhotos } from "../../api/client";
 
 const MAT_SIDE = 28;
 const MAT_TOP = 28;
-const GALLERY_BG = "#f0ede8";
+const GALLERY_BG = "var(--pale-slate)";
 const GALLERY_PAD = 16;
 const SIDE_PANEL_W = 260;
 const WINDOW_TITLE_H = 28;
@@ -100,7 +100,7 @@ export default function PhotoDetail({
 
   if (isLoading || !photo) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", background: GALLERY_BG }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", background: "var(--pale-slate)" }}>
         Loading...
       </div>
     );
@@ -262,6 +262,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 16,
     background: GALLERY_BG,
     overflow: "hidden",
+    borderTop: "2px solid var(--bevel-shadow)",
+    borderLeft: "2px solid var(--bevel-shadow)",
+    borderBottom: "2px solid var(--bevel-highlight)",
+    borderRight: "2px solid var(--bevel-highlight)",
   },
   frameWrap: {
     maxWidth: "100%",
@@ -273,8 +277,8 @@ const styles: Record<string, React.CSSProperties> = {
   frame: {
     display: "flex",
     flexDirection: "column",
-    background: "#fff",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.07)",
+    background: "var(--bright-snow)",
+    boxShadow: "2px 2px 4px rgba(0,0,0,0.15)",
     maxWidth: "100%",
     maxHeight: "100%",
     overflow: "hidden",
@@ -289,7 +293,10 @@ const styles: Record<string, React.CSSProperties> = {
   fillet: {
     position: "absolute",
     inset: 0,
-    border: "1px solid #e0dcd4",
+    borderTop: "1px solid var(--bevel-shadow)",
+    borderLeft: "1px solid var(--bevel-shadow)",
+    borderBottom: "1px solid var(--bevel-highlight)",
+    borderRight: "1px solid var(--bevel-highlight)",
     zIndex: 6,
     pointerEvents: "none",
   },
@@ -309,9 +316,10 @@ const styles: Record<string, React.CSSProperties> = {
   sidePanel: {
     width: 260,
     flexShrink: 0,
-    borderLeft: "1px solid var(--window-border)",
+    borderLeft: "2px solid var(--groove-dark)",
     overflowY: "auto",
     padding: "12px 16px 16px",
+    background: "var(--platinum)",
   },
   compactImage: {
     position: "relative" as const,

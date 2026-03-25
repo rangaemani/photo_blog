@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import type { Category } from '../../types';
+import type { Category, WidgetType } from '../../types';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useSoundContext } from '../../contexts/SoundContext';
 import MenuDropdown from './MenuDropdown';
@@ -14,9 +14,11 @@ interface Props {
   onOpenLogin: () => void;
   onOpenUpload: () => void;
   onResetDesktop?: () => void;
+  onToggleWidget: (type: WidgetType) => void;
+  openWidgetTypes: WidgetType[];
 }
 
-export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onResetDesktop }: Props) {
+export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onResetDesktop, onToggleWidget, openWidgetTypes }: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [clock, setClock] = useState('');
 
@@ -69,6 +71,12 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
       { label: '', divider: true },
       { label: 'Toggle Grid Size', action: onToggleGridSize },
       { label: 'Cycle Windows', shortcut: `${ctrlKey}\``, disabled: true },
+      { label: '', divider: true },
+      { label: `${openWidgetTypes.includes('clock') ? '* ' : ''}Clock`, action: () => onToggleWidget('clock') },
+      { label: `${openWidgetTypes.includes('notes') ? '* ' : ''}Sticky Notes`, action: () => onToggleWidget('notes') },
+      { label: `${openWidgetTypes.includes('weather') ? '* ' : ''}Weather`, action: () => onToggleWidget('weather') },
+      { label: `${openWidgetTypes.includes('systemInfo') ? '* ' : ''}System Info`, action: () => onToggleWidget('systemInfo') },
+      { label: `${openWidgetTypes.includes('musicPlayer') ? '* ' : ''}Music Player`, action: () => onToggleWidget('musicPlayer') },
     ],
     Go: [
       { label: 'Home', action: onOpenAllPhotos },
@@ -93,7 +101,13 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
             <button
               style={{
                 ...styles.menuBtn,
-                background: openMenu === name ? 'rgba(0,0,0,0.06)' : 'transparent',
+                ...(openMenu === name ? {
+                  background: 'var(--alabaster-grey)',
+                  borderTop: '1px solid var(--bevel-shadow)',
+                  borderLeft: '1px solid var(--bevel-shadow)',
+                  borderBottom: '1px solid var(--bevel-highlight)',
+                  borderRight: '1px solid var(--bevel-highlight)',
+                } : {}),
               }}
               onClick={() => toggleMenu(name)}
               onMouseEnter={() => { if (openMenu && openMenu !== name) setOpenMenu(name); }}
@@ -130,11 +144,12 @@ const styles: Record<string, React.CSSProperties> = {
     right: 0,
     height: 28,
     background: 'var(--menubar-bg)',
-    borderBottom: '1px solid var(--menubar-border)',
+    borderTop: '2px solid var(--bevel-highlight)',
+    borderBottom: '2px solid var(--bevel-shadow)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 12px',
+    padding: '0 8px',
     zIndex: 9999,
   },
   left: {
@@ -155,9 +170,10 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     cursor: 'pointer',
     fontSize: 13,
+    fontWeight: 500,
     color: 'var(--text-primary)',
     padding: '2px 10px',
-    borderRadius: 4,
+    borderRadius: 0,
   },
   muteBtn: {
     border: 'none',
@@ -170,6 +186,6 @@ const styles: Record<string, React.CSSProperties> = {
   clock: {
     fontSize: 12,
     color: 'var(--text-secondary)',
-    fontFamily: 'ui-monospace, monospace',
+    fontFamily: "'PixeAn', monospace",
   },
 };

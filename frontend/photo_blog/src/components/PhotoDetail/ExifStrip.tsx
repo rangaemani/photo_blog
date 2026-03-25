@@ -56,8 +56,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0px',
   },
   separator: {
-    height: 1,
-    background: '#e8e4de',
+    height: 0,
+    borderTop: '1px solid var(--groove-dark)',
+    borderBottom: '1px solid var(--groove-light)',
     margin: '8px 0 6px',
   },
   row: {
@@ -84,19 +85,19 @@ const styles: Record<string, React.CSSProperties> = {
   camera: {
     fontSize: 10,
     fontWeight: 600,
-    color: '#999',
+    color: 'var(--slate-grey)',
     letterSpacing: 0.3,
     whiteSpace: 'nowrap',
   },
   text: {
     fontSize: 10,
-    color: '#aaa',
+    color: 'var(--pale-slate-2)',
     fontFamily: 'ui-monospace, "SF Mono", monospace',
     whiteSpace: 'nowrap',
   },
   dot: {
     fontSize: 10,
-    color: '#ccc',
+    color: 'var(--pale-slate-2)',
     margin: '0 3px',
   },
 };

@@ -159,13 +159,13 @@ function TrashCell({ photo, selected, onToggle }: { photo: TrashedPhotoListItem;
       onClick={onToggle}
     >
       <div style={{ position: 'relative', width: '100%', aspectRatio: '1' }}>
-        <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 4, opacity: loaded ? 0 : 1, transition: 'opacity 200ms' }} />
+        <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 0, opacity: loaded ? 0 : 1, transition: 'opacity 200ms' }} />
         <img
           src={photo.thumbnail_url}
           alt={photo.title}
           loading="lazy"
           onLoad={() => setLoaded(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4, opacity: loaded ? 1 : 0, transition: 'opacity 200ms' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0, opacity: loaded ? 1 : 0, transition: 'opacity 200ms' }}
         />
         <div style={{ position: 'absolute', top: 4, left: 4, fontSize: 16, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
           {selected ? '☑' : '☐'}
@@ -190,23 +190,29 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     padding: '6px 12px',
-    borderBottom: '1px solid var(--window-border)',
-    background: '#faf8f4',
+    borderBottom: '1px solid var(--groove-dark)',
+    background: 'var(--toolbar-bg)',
     flexShrink: 0,
   },
   btn: {
     fontSize: 11,
     padding: '3px 10px',
-    border: '1px solid var(--window-border)',
-    borderRadius: 3,
-    background: 'var(--window-titlebar-bg)',
+    borderTop: '1px solid var(--bevel-highlight)',
+    borderLeft: '1px solid var(--bevel-highlight)',
+    borderBottom: '1px solid var(--bevel-shadow)',
+    borderRight: '1px solid var(--bevel-shadow)',
+    borderRadius: 0,
+    background: 'var(--pale-slate)',
     cursor: 'pointer',
   },
   dangerBtn: {
     fontSize: 11,
     padding: '3px 10px',
-    border: '1px solid var(--close-hover)',
-    borderRadius: 3,
+    borderTop: '1px solid #e87070',
+    borderLeft: '1px solid #e87070',
+    borderBottom: '1px solid #8a1a1a',
+    borderRight: '1px solid #8a1a1a',
+    borderRadius: 0,
     background: 'var(--close-hover)',
     color: '#fff',
     cursor: 'pointer',
@@ -223,6 +229,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cell: {
     cursor: 'pointer',
-    borderRadius: 6,
+    borderRadius: 0,
   },
 };

@@ -5,6 +5,7 @@ import { useDraggable } from '../../hooks/useDraggable';
 import { useDragSource } from '../../hooks/useDragSource';
 import { useDropZone } from '../../hooks/useDropZone';
 import { useSoundContext } from '../../contexts/SoundContext';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   icon: DesktopIconState;
@@ -23,24 +24,27 @@ interface Props {
   onHoverEnd: () => void;
 }
 
-const KIND_EMOJI: Record<IconKind, string> = {
-  app: '\uD83D\uDDBC\uFE0F',
-  folder: '\uD83D\uDCC1',
-  file: '\uD83D\uDCC4',
-  system: '\uD83D\uDDD1\uFE0F',
-  photo: '\uD83D\uDDBC\uFE0F',
+const KIND_ICON: Record<IconKind, string> = {
+  app: icons.lg.grid,
+  folder: icons.lg.folder,
+  file: icons.lg.static,
+  system: icons.lg.recycleEmpty,
+  photo: icons.lg.detail,
 };
 
-// Overrides for well-known icon IDs that differ from their iconType default
-const ID_EMOJI: Record<string, string> = {
-  about: '\u2139\uFE0F',
-  contact: '\u2709\uFE0F',
-  map: '\uD83D\uDDFA\uFE0F',
+// Overrides for well-known icon IDs
+const ID_ICON: Record<string, string> = {
+  about: icons.lg.static,
+  contact: icons.lg.contact,
+  map: icons.lg.map,
 };
 
-function resolveEmoji(icon: DesktopIconState): string {
-  if (icon.iconType === 'photo') return '\uD83D\uDDBC\uFE0F';
-  return ID_EMOJI[icon.id] ?? KIND_EMOJI[icon.iconType];
+function resolveIcon(icon: DesktopIconState): string {
+  if (icon.action.type === 'openTrash') return icons.lg.recycleFull;
+  if (icon.action.type === 'openGrid') {
+    return icon.action.categorySlug ? icons.lg.folder : icons.lg.grid;
+  }
+  return ID_ICON[icon.id] ?? KIND_ICON[icon.iconType];
 }
 
 /** Whether this icon is a user-created item that can be renamed. */
@@ -224,7 +228,7 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: 32,
-        borderRadius: 4,
+        borderRadius: 0,
         overflow: 'hidden',
       }}>
         {icon.iconType === 'photo' && icon.thumbnailUrl
@@ -232,11 +236,18 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
             <img
               src={icon.thumbnailUrl}
               alt={icon.label}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4, display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0, display: 'block' }}
               draggable={false}
             />
           )
-          : resolveEmoji(icon)
+          : (
+            <img
+              src={resolveIcon(icon)}
+              alt=""
+              style={{ width: 32, height: 32, imageRendering: 'pixelated' }}
+              draggable={false}
+            />
+          )
         }
       </div>
       {isRenaming ? (
@@ -260,10 +271,13 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
             lineHeight: '14px',
             width: 76,
             padding: '1px 2px',
-            borderRadius: 3,
-            border: '1px solid var(--accent)',
+            borderRadius: 0,
+            borderTop: '1px solid var(--bevel-shadow)',
+            borderLeft: '1px solid var(--bevel-shadow)',
+            borderBottom: '1px solid var(--bevel-highlight)',
+            borderRight: '1px solid var(--bevel-highlight)',
             outline: 'none',
-            background: '#fff',
+            background: 'var(--inset-bg)',
             color: 'var(--text-primary)',
           }}
         />
@@ -281,7 +295,7 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             padding: '1px 4px',
-            borderRadius: 3,
+            borderRadius: 0,
             color: isSelected ? '#fff' : 'var(--text-primary)',
             background: isSelected ? 'var(--accent-light)' : 'transparent',
           }}

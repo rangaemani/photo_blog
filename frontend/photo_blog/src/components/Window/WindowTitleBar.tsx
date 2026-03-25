@@ -1,4 +1,5 @@
 import type { WindowContentType } from '../../types';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   title: string;
@@ -10,19 +11,19 @@ interface Props {
 }
 
 const TYPE_ICONS: Record<WindowContentType, string> = {
-  grid: '\uD83D\uDCC1',
-  detail: '\uD83D\uDDBC\uFE0F',
-  static: '\uD83D\uDCC4',
-  login: '\uD83D\uDD10',
-  upload: '\uD83D\uDCE4',
-  trash: '\uD83D\uDDD1\uFE0F',
+  grid: icons.sm.grid,
+  detail: icons.sm.detail,
+  static: icons.sm.static,
+  login: icons.sm.login,
+  upload: icons.sm.upload,
+  trash: icons.sm.trash,
 };
 
 export default function WindowTitleBar({ title, windowType, onClose, onMinimize, onMaximize, onMouseDown }: Props) {
   return (
     <div style={styles.bar} onMouseDown={onMouseDown} onDoubleClick={onMaximize}>
       <div style={styles.left}>
-        <span style={styles.icon}>{TYPE_ICONS[windowType]}</span>
+        <img src={TYPE_ICONS[windowType]} alt="" style={styles.icon} draggable={false} />
       </div>
       <div style={styles.title}>{title}</div>
       <div style={styles.controls}>
@@ -36,12 +37,12 @@ export default function WindowTitleBar({ title, windowType, onClose, onMinimize,
 
 const styles: Record<string, React.CSSProperties> = {
   bar: {
-    height: 32,
-    background: 'var(--window-titlebar-bg)',
-    borderBottom: '1px solid var(--window-border)',
+    height: 28,
+    background: 'linear-gradient(180deg, var(--pale-slate) 0%, var(--pale-slate-2) 100%)',
+    borderBottom: '1px solid var(--groove-dark)',
     display: 'flex',
     alignItems: 'center',
-    padding: '0 8px',
+    padding: '0 4px',
     cursor: 'default',
     flexShrink: 0,
   },
@@ -51,19 +52,24 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 4,
   },
   icon: {
-    fontSize: 14,
+    width: 16,
+    height: 16,
+    imageRendering: 'pixelated' as const,
   },
   title: {
     flex: 1,
     textAlign: 'center' as const,
     fontSize: 13,
-    color: 'var(--text-primary)',
+    fontFamily: "'PixeAn', sans-serif",
+    fontWeight: 'normal' as const,
+    color: 'var(--carbon-black)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,
+    letterSpacing: 1,
   },
   controls: {
     display: 'flex',
-    gap: 2,
+    gap: 3,
   },
 };

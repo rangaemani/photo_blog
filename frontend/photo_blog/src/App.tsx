@@ -6,11 +6,13 @@ import { useWindowManager } from './hooks/useWindowManager';
 import { usePhotos } from './hooks/usePhotos';
 import { useSelection } from './hooks/useSelection';
 import { useDesktopState } from './hooks/useDesktopState';
+import { useWidgetState } from './hooks/useWidgetState';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { DragDropProvider } from './contexts/DragDropContext';
 import { SoundProvider, useSoundContext } from './contexts/SoundContext';
 
 import MenuBar from './components/MenuBar/MenuBar';
+import WidgetLayer from './components/Widgets/WidgetLayer';
 import Desktop from './components/Desktop/Desktop';
 import Window from './components/Window/Window';
 import WindowToolbar from './components/Window/WindowToolbar';
@@ -24,7 +26,7 @@ import UploadWindow from './components/Upload/UploadWindow';
 import TrashWindow from './components/Trash/TrashWindow';
 import AboutContent from './components/StaticPages/AboutContent';
 import ContactContent from './components/StaticPages/ContactContent';
-import MapPlaceholder from './components/StaticPages/MapPlaceholder';
+import MapContent from './components/StaticPages/MapPlaceholder';
 import ToastContainer, { type ToastMessage } from './components/Toast';
 import ShareContent from './components/StaticPages/ShareContent';
 
@@ -63,6 +65,7 @@ function AppInner() {
   const auth = useAuthContext();
   const { isAuthenticated } = auth;
   const desktop = useDesktopState(categories, isAuthenticated);
+  const widgets = useWidgetState();
   const sound = useSoundContext();
 
   // Initial load: fetch categories
@@ -597,7 +600,7 @@ function AppInner() {
         switch (win.staticPayload?.contentKey) {
           case 'about': return <AboutContent />;
           case 'contact': return <ContactContent />;
-          case 'map-placeholder': return <MapPlaceholder />;
+          case 'map-placeholder': return <MapContent />;
           case 'share': return <ShareContent onExport={desktop.exportBlob} onShowToast={showToast} />
           default: return null;
         }
@@ -669,6 +672,8 @@ function AppInner() {
         onOpenLogin={openLoginWindow}
         onOpenUpload={openUploadWindow}
         onResetDesktop={desktop.reset}
+        onToggleWidget={widgets.toggleWidget}
+        openWidgetTypes={widgets.openWidgetTypes}
       />
       <Desktop
         icons={desktop.icons}
@@ -684,6 +689,11 @@ function AppInner() {
         onHoverEnd={() => setStatusText('')}
         onContextMenu={setContextMenu}
       >
+        <WidgetLayer
+          widgets={widgets.widgets}
+          onMove={widgets.moveWidget}
+          onClose={widgets.closeWidget}
+        />
         <AnimatePresence>
           {(() => {
             const maxZ = wm.windows.filter(w => !w.isMinimized).reduce((m, w) => Math.max(m, w.zIndex), 0);

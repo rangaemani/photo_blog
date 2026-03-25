@@ -96,11 +96,14 @@ export default function ContextMenu({ menu, onClose }: Props) {
         position: 'fixed',
         left: pos.x,
         top: pos.y,
-        background: '#fff',
-        border: '1px solid #ddd',
-        borderRadius: 8,
+        background: 'var(--platinum)',
+        borderTop: '2px solid var(--bevel-highlight)',
+        borderLeft: '2px solid var(--bevel-highlight)',
+        borderBottom: '2px solid var(--bevel-dark)',
+        borderRight: '2px solid var(--bevel-dark)',
+        borderRadius: 0,
         boxShadow: 'var(--dropdown-shadow)',
-        padding: '4px 0',
+        padding: '2px 0',
         minWidth: 160,
         zIndex: 20000,
         transformOrigin: origin,
@@ -108,14 +111,14 @@ export default function ContextMenu({ menu, onClose }: Props) {
     >
       {menu.items.map((item, i) =>
         item.divider ? (
-          <div key={i} style={{ height: 1, background: '#e5e5e5', margin: '4px 8px' }} />
+          <div key={i} style={{ height: 0, borderTop: '1px solid var(--groove-dark)', borderBottom: '1px solid var(--groove-light)', margin: '3px 4px' }} />
         ) : (
           <div
             key={i}
             className="context-menu-item"
             data-disabled={item.disabled || undefined}
             data-focused={focusIdx === i || undefined}
-            style={{ color: item.disabled ? undefined : '#333' }}
+            style={{ color: item.disabled ? undefined : 'var(--text-primary)' }}
             onClick={() => {
               if (item.disabled) return;
               item.action?.();
@@ -125,7 +128,7 @@ export default function ContextMenu({ menu, onClose }: Props) {
             onMouseLeave={() => setFocusIdx(-1)}
           >
             {item.label}
-            {item.shortcut && <span style={{ marginLeft: 'auto', paddingLeft: 16, fontSize: 11, color: '#999' }}>{item.shortcut}</span>}
+            {item.shortcut && <span style={{ marginLeft: 'auto', paddingLeft: 16, fontSize: 11, color: 'var(--slate-grey)' }}>{item.shortcut}</span>}
           </div>
         )
       )}

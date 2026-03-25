@@ -91,8 +91,7 @@ export default function MenuDropdown({ items, onClose }: Props) {
             }}
           >
             <span>{item.label}</span>
-            {item.shortcut && <span style={{ marginLeft: 'auto', paddingLeft: 16, fontSize: 11, color: '#999' }}>{item.shortcut}</span>}
-            {item.external && <span style={{ marginLeft: 4, fontSize: 10 }}>&nearr;</span>}
+            {item.shortcut && <span style={{ marginLeft: 'auto', paddingLeft: 16, fontSize: 11, color: 'var(--slate-grey)' }}>{item.shortcut}</span>}            
           </div>
         )
       )}
@@ -105,17 +104,21 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'absolute',
     top: '100%',
     left: 0,
-    background: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: 6,
+    background: 'var(--platinum)',
+    borderTop: '2px solid var(--bevel-highlight)',
+    borderLeft: '2px solid var(--bevel-highlight)',
+    borderBottom: '2px solid var(--bevel-dark)',
+    borderRight: '2px solid var(--bevel-dark)',
+    borderRadius: 0,
     boxShadow: 'var(--dropdown-shadow)',
-    padding: '4px 0',
+    padding: '2px 0',
     minWidth: 180,
     zIndex: 10000,
   },
   divider: {
-    height: 1,
-    background: '#e5e5e5',
-    margin: '4px 8px',
+    height: 0,
+    borderTop: '1px solid var(--groove-dark)',
+    borderBottom: '1px solid var(--groove-light)',
+    margin: '3px 4px',
   },
 };

@@ -85,9 +85,12 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     marginTop: 8,
     marginBottom: 2,
-    border: '1px solid var(--window-border)',
-    borderRadius: 6,
-    background: '#faf8f4',
+    borderTop: '1px solid var(--bevel-shadow)',
+    borderLeft: '1px solid var(--bevel-shadow)',
+    borderBottom: '1px solid var(--bevel-highlight)',
+    borderRight: '1px solid var(--bevel-highlight)',
+    borderRadius: 0,
+    background: 'var(--platinum)',
     overflow: 'hidden',
   },
   summary: {
@@ -126,7 +129,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column' as const,
     gap: 3,
     padding: '4px 10px 8px',
-    borderTop: '1px solid var(--window-border)',
+    borderTop: '1px solid var(--groove-dark)',
   },
   row: {
     display: 'flex',

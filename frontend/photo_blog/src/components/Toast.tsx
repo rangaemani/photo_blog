@@ -40,11 +40,14 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
       transition={{ duration: 0.15 }}
       style={{
         padding: '8px 16px',
-        borderRadius: 6,
-        background: isError ? '#3a1a1a' : 'var(--window-bg)',
+        borderRadius: 0,
+        background: isError ? '#3a1a1a' : 'var(--platinum)',
         color: isError ? '#f5a5a5' : 'var(--text-primary)',
-        border: `1px solid ${isError ? '#5a2a2a' : 'var(--window-border)'}`,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+        borderTop: `2px solid ${isError ? '#5a2a2a' : 'var(--bevel-highlight)'}`,
+        borderLeft: `2px solid ${isError ? '#5a2a2a' : 'var(--bevel-highlight)'}`,
+        borderBottom: `2px solid ${isError ? '#1a0a0a' : 'var(--bevel-dark)'}`,
+        borderRight: `2px solid ${isError ? '#1a0a0a' : 'var(--bevel-dark)'}`,
+        boxShadow: '3px 3px 6px rgba(0,0,0,0.35)',
         fontSize: 13,
         whiteSpace: 'nowrap',
         cursor: 'pointer',

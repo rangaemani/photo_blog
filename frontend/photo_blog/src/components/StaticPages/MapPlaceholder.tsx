@@ -1,23 +1,15 @@
 import { motion } from 'framer-motion';
+import GlobeView from './GlobeView';
 
-export default function MapPlaceholder() {
+export default function MapContent() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        color: 'var(--text-muted)',
-        gap: 12,
-      }}
+      style={{ width: '100%', height: '100%', padding: 8 }}
     >
-      <span aria-hidden="true" style={{ fontSize: 48 }}>🗺️</span>
-      <p style={{ fontSize: 14 }}>Map view coming soon.</p>
+      <GlobeView />
     </motion.div>
   );
 }

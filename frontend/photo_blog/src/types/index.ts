@@ -164,6 +164,17 @@ export interface ActiveDrag {
 
 export type WindowContentType = 'grid' | 'detail' | 'static' | 'login' | 'upload' | 'trash';
 
+// === Widget types ===
+
+export type WidgetType = 'clock' | 'notes' | 'weather' | 'systemInfo' | 'musicPlayer';
+
+export interface WidgetState {
+  id: string;
+  type: WidgetType;
+  position: Position;
+  isOpen: boolean;
+}
+
 export interface GridPayload {
   categorySlug: string | null;
   photos: PhotoListItem[];

@@ -30,8 +30,7 @@ export function derivePreset(categories: Category[]): DesktopIconState[] {
     action: { type: 'openGrid' as const, categorySlug: c.slug },
   }));
 
-  const staticRight: DesktopIconState[] = [
-    { id: 'about', label: 'About', iconType: 'file', position: getRightColumnPosition(0), action: { type: 'openStatic', contentKey: 'about' } },
+  const staticRight: DesktopIconState[] = [    
     { id: 'contact', label: 'Contact', iconType: 'file', position: getRightColumnPosition(1), action: { type: 'openStatic', contentKey: 'contact' } },
     { id: 'map', label: 'Map', iconType: 'app', position: getRightColumnPosition(2), action: { type: 'openStatic', contentKey: 'map-placeholder' } },
     { id: 'trash', label: 'Trash', iconType: 'system', position: getRightColumnPosition(3), action: { type: 'openTrash' } },

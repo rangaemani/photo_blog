@@ -74,10 +74,10 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
         hidden: { opacity: 0, y: 16 },
         show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 28 } },
       }}
-      whileHover={{ y: -4, boxShadow: '0 8px 20px rgba(0,0,0,0.12)' }}
+      whileHover={{ y: -2, boxShadow: '2px 2px 6px rgba(0,0,0,0.2)' }}
       style={{
         ...styles.cell,
-        ...(selected ? { outline: '2px solid var(--accent)', outlineOffset: -2, borderRadius: 6 } : undefined),
+        ...(selected ? { outline: '2px solid var(--accent)', outlineOffset: -2, borderRadius: 0 } : undefined),
       }}
       onPointerDown={isDraggable && !selectable ? onPointerDown : undefined}
       onClick={(e) => {
@@ -113,7 +113,7 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
             inset: 0,
             width: '100%',
             height: '100%',
-            borderRadius: 4,
+            borderRadius: 0,
             opacity: loaded ? 0 : 1,
             transition: 'opacity 200ms',
           }}
@@ -127,7 +127,7 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            borderRadius: 4,
+            borderRadius: 0,
             display: 'block',
             opacity: loaded ? 1 : 0,
             transition: 'opacity 200ms',

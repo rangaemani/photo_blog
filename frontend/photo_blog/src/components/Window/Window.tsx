@@ -84,8 +84,8 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
 
   // Focus shadow: deeper when this is the front-most visible window
   const shadow = isFocused && !win.isMinimized
-    ? '0 8px 30px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)'
-    : '0 2px 8px rgba(0,0,0,0.06)';
+    ? '2px 2px 6px rgba(0,0,0,0.3)'
+    : '1px 1px 3px rgba(0,0,0,0.15)';
 
   // During drag/resize: instant position updates; otherwise spring for maximize/restore
   const layoutTransition = isInteracting
@@ -113,8 +113,11 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
         display: 'flex',
         flexDirection: 'column',
         background: 'var(--window-bg)',
-        border: '1px solid var(--window-border)',
-        borderRadius: 6,
+        borderTop: '2px solid var(--bevel-highlight)',
+        borderLeft: '2px solid var(--bevel-highlight)',
+        borderBottom: '2px solid var(--bevel-dark)',
+        borderRight: '2px solid var(--bevel-dark)',
+        borderRadius: 0,
         overflow: 'hidden',
         pointerEvents: win.isMinimized ? 'none' : 'auto',
       }}
@@ -136,7 +139,7 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
           flex: 1,
           overflow: 'auto',
           position: 'relative',
-          ...(isOver && dropZoneId ? { outline: '2px solid var(--accent)', outlineOffset: -2, borderRadius: 4 } : undefined),
+          ...(isOver && dropZoneId ? { outline: '2px solid var(--accent)', outlineOffset: -2, borderRadius: 0 } : undefined),
         }}
       >
         {children}
