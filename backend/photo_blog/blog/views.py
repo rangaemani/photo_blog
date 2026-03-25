@@ -29,6 +29,11 @@ class PhotoListView(viewsets.ReadOnlyModelViewSet[Photo]):
         category_slug = self.request.query_params.get('category')
         if category_slug:
             qs = qs.filter(category__slug=category_slug)
+        order = self.request.query_params.get('order', 'desc')
+        if order == 'asc':
+            qs = qs.order_by(models.F('taken_at').asc(nulls_last=True), 'id')
+        else:
+            qs = qs.order_by(models.F('taken_at').desc(nulls_last=True), '-id')
         return qs
     
     def get_serializer_class(self): # pyright: ignore[reportIncompatibleMethodOverride]

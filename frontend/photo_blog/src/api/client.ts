@@ -109,12 +109,11 @@ export function setDisplayName(display_name: string): Promise<{ ok: boolean; use
  * @param page - Page number for pagination.
  * @returns Paginated list of photo summaries.
  */
-export function getPhotos(categorySlug?: string, page?: number): Promise<PaginatedResponse<PhotoListItem>> {
+export function getPhotos(categorySlug?: string, order: 'asc' | 'desc' = 'desc'): Promise<PaginatedResponse<PhotoListItem>> {
   const params = new URLSearchParams();
   if (categorySlug) params.set('category', categorySlug);
-  if (page) params.set('page', String(page));
-  const qs = params.toString();
-  return fetchJSON(`${API_BASE}/photos/${qs ? `?${qs}` : ''}`);
+  params.set('order', order);
+  return fetchJSON(`${API_BASE}/photos/?${params.toString()}`);
 }
 
 /** Fetch full details for a single photo by its URL slug.
@@ -194,6 +193,10 @@ export function deleteCategory(slug: string): Promise<{
  */
 export function patchPhotoCategory(slug: string, categorySlug: string): Promise<{ category: string }> {
   return patchJSON(`${API_BASE}/photos/${slug}/patch/`, { category: categorySlug });
+}
+
+export function patchPhotoLocation(slug: string, lat: number | null, lng: number | null): Promise<{ lat: number | null; lng: number | null }> {
+  return patchJSON(`${API_BASE}/photos/${slug}/patch/`, { lat, lng });
 }
 
 

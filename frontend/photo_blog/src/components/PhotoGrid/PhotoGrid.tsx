@@ -16,11 +16,12 @@ interface Props {
   onToggleSelect?: (id: string) => void;
   onRangeSelect?: (id: string, orderedIds: string[]) => void;
   onTrashed?: () => void;
+  onSortChange?: (order: 'asc' | 'desc') => void;
   isDraggable?: boolean;
   sourceWindowId?: string;
 }
 
-export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onHover, onHoverEnd, onContextMenu, selectable, isSelected, onToggleSelect, onRangeSelect, onTrashed, isDraggable, sourceWindowId }: Props) {
+export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onHover, onHoverEnd, onContextMenu, selectable, isSelected, onToggleSelect, onRangeSelect, onTrashed, onSortChange, isDraggable, sourceWindowId }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const orderedIds = useMemo(() => grid.photos.map(p => p.id), [grid.photos]);
   const handleRangeSelect = useCallback((id: string) => {
@@ -53,7 +54,35 @@ export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onH
   }
 
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {onSortChange && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '4px 8px',
+          borderBottom: '1px solid var(--groove-dark)',
+          background: 'var(--toolbar-bg)',
+          flexShrink: 0,
+        }}>
+          <button
+            onClick={() => onSortChange(grid.order === 'desc' ? 'asc' : 'desc')}
+            style={{
+              fontSize: 11,
+              padding: '2px 8px',
+              borderTop: '1px solid var(--bevel-highlight)',
+              borderLeft: '1px solid var(--bevel-highlight)',
+              borderBottom: '1px solid var(--bevel-shadow)',
+              borderRight: '1px solid var(--bevel-shadow)',
+              background: 'var(--pale-slate)',
+              cursor: 'pointer',
+            }}
+            title={grid.order === 'desc' ? 'Newest first — click for oldest first' : 'Oldest first — click for newest first'}
+          >
+            {grid.order === 'desc' ? '↓ Newest' : '↑ Oldest'}
+          </button>
+        </div>
+      )}
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
       <motion.div
         key={grid.photos[0]?.id ?? 'empty'}
         variants={{
@@ -87,6 +116,7 @@ export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onH
       </motion.div>
       <div ref={sentinelRef} style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {grid.isLoadingMore && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Loading more...</span>}
+      </div>
       </div>
     </div>
   );

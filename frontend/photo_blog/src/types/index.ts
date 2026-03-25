@@ -183,6 +183,7 @@ export interface GridPayload {
   next: string | null;
   count: number;
   isLoadingMore: boolean;
+  order: 'asc' | 'desc';
 }
 
 export interface DetailPayload {

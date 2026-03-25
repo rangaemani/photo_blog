@@ -115,7 +115,7 @@ function AppInner() {
 
     sound.play('windowOpen');
     const id = wm.openWindow(title + ' — loading...', 'grid', {
-      gridPayload: { categorySlug: categorySlug ?? null, photos: [], next: null, count: 0, isLoadingMore: false },
+      gridPayload: { categorySlug: categorySlug ?? null, photos: [], next: null, count: 0, isLoadingMore: false, order: 'desc' },
     });
     selection.clear();
     try {
@@ -208,7 +208,7 @@ function AppInner() {
         wm.openWindow(
           folderPhotos.length > 0 ? `${icon.label} — ${folderPhotos.length} photos` : icon.label,
           'grid',
-          { gridPayload: { categorySlug: icon.id, photos: folderPhotos, next: null, count: folderPhotos.length, isLoadingMore: false } },
+          { gridPayload: { categorySlug: icon.id, photos: folderPhotos, next: null, count: folderPhotos.length, isLoadingMore: false, order: 'desc' } },
         );
         return;
       }
@@ -251,6 +251,27 @@ function AppInner() {
       return 2;
     });
   }, []);
+
+  // === Sort order toggle for grid windows ===
+
+  const handleSortChange = useCallback(async (win: WindowState, order: 'asc' | 'desc') => {
+    if (!win.gridPayload) return;
+    const slug = win.gridPayload.categorySlug;
+    if (slug?.startsWith('guest-folder-')) {
+      wm.updateWindow(win.id, {
+        gridPayload: { ...win.gridPayload, photos: [...win.gridPayload.photos].reverse(), order },
+      });
+      return;
+    }
+    try {
+      const grid = await photos.fetchGrid(slug, order);
+      const cat = categories.find(c => c.slug === slug);
+      wm.updateWindow(win.id, {
+        title: `${cat?.name ?? 'All Photos'} — ${grid.count} photos`,
+        gridPayload: grid,
+      });
+    } catch { /* leave as-is */ }
+  }, [wm, photos, categories]);
 
   // === Refresh all open windows after a mutation ===
 
@@ -577,6 +598,7 @@ function AppInner() {
             onToggleSelect={selection.toggle}
             onRangeSelect={selection.rangeSelect}
             onTrashed={() => refreshOpenWindows()}
+            onSortChange={(order) => handleSortChange(win, order)}
             isDraggable={!selectMode}
             sourceWindowId={win.id}
           />

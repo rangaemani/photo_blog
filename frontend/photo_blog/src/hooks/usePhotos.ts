@@ -6,8 +6,8 @@ import type { PhotoListItem, PhotoDetail, GridPayload } from '../types';
 const gridCache = new Map<string, { photos: PhotoListItem[]; next: string | null; count: number }>();
 const detailCache = new Map<string, PhotoDetail>();
 
-function cacheKey(slug: string | null) {
-  return slug ?? '__all__';
+function cacheKey(slug: string | null, order: 'asc' | 'desc' = 'desc') {
+  return `${slug ?? '__all__'}:${order}`;
 }
 
 /** Provides cached photo data fetching — grid listings, pagination, and detail views.
@@ -16,20 +16,21 @@ function cacheKey(slug: string | null) {
 export function usePhotos() {
   const loadingRef = useRef(new Set<string>());
 
-  const fetchGrid = useCallback(async (categorySlug: string | null): Promise<GridPayload> => {
-    const key = cacheKey(categorySlug);
+  const fetchGrid = useCallback(async (categorySlug: string | null, order: 'asc' | 'desc' = 'desc'): Promise<GridPayload> => {
+    const key = cacheKey(categorySlug, order);
     const cached = gridCache.get(key);
     if (cached) {
-      return { categorySlug, photos: cached.photos, next: cached.next, count: cached.count, isLoadingMore: false };
+      return { categorySlug, photos: cached.photos, next: cached.next, count: cached.count, isLoadingMore: false, order };
     }
 
-    const data = await getPhotos(categorySlug ?? undefined);
+    const data = await getPhotos(categorySlug ?? undefined, order);
     const payload: GridPayload = {
       categorySlug,
       photos: data.results,
       next: data.next,
       count: data.count,
       isLoadingMore: false,
+      order,
     };
     gridCache.set(key, { photos: data.results, next: data.next, count: data.count });
     return payload;
@@ -38,7 +39,7 @@ export function usePhotos() {
   const fetchMore = useCallback(async (grid: GridPayload): Promise<GridPayload> => {
     if (!grid.next || grid.isLoadingMore) return grid;
 
-    const key = cacheKey(grid.categorySlug);
+    const key = cacheKey(grid.categorySlug, grid.order);
     if (loadingRef.current.has(key)) return grid;
     loadingRef.current.add(key);
 
