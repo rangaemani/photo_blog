@@ -146,6 +146,25 @@ def _extract_exif(file_bytes: bytes) -> dict[str, Any]:
         if tag in tags:
             result[field] = str(tags[tag]).strip()
 
+    # GPS — parse DMS triplet and apply hemisphere ref for correct sign
+    for coord_tag, ref_tag, field in [
+        ('GPS GPSLatitude',  'GPS GPSLatitudeRef',  'lat'),
+        ('GPS GPSLongitude', 'GPS GPSLongitudeRef', 'lng'),
+    ]:
+        if coord_tag not in tags:
+            continue
+        try:
+            parts = [float(x.num) / float(x.den) for x in tags[coord_tag].values]
+            if len(parts) != 3:
+                continue
+            dd = parts[0] + parts[1] / 60 + parts[2] / 3600
+            ref = str(tags.get(ref_tag, '')).strip().upper()
+            if ref in ('S', 'W'):
+                dd = -dd
+            result[field] = dd
+        except (AttributeError, ZeroDivisionError, ValueError):
+            logger.warning("Could not parse GPS coordinate: %s", tags[coord_tag])
+
     if 'EXIF ISOSpeedRatings' in tags:
         try:
             result['iso'] = int(str(tags['EXIF ISOSpeedRatings']))
