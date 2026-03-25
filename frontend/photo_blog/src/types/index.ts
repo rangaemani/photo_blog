@@ -46,6 +46,8 @@ export interface PhotoListItem {
   taken_at: string | null;
   category_slug: string;
   blurhash: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface PhotoDetail extends PhotoListItem {

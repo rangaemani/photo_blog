@@ -42,7 +42,11 @@ const ID_ICON: Record<string, string> = {
 function resolveIcon(icon: DesktopIconState): string {
   if (icon.action.type === 'openTrash') return icons.lg.recycleFull;
   if (icon.action.type === 'openGrid') {
-    return icon.action.categorySlug ? icons.lg.folder : icons.lg.grid;
+    // Guest folders and real category folders both show the folder icon;
+    // only the "All Photos" icon (openGrid with no slug and no guest id) shows the camera.
+    return (icon.action.categorySlug || icon.id.startsWith('guest-folder-'))
+      ? icons.lg.folder
+      : icons.lg.grid;
   }
   return ID_ICON[icon.id] ?? KIND_ICON[icon.iconType];
 }
