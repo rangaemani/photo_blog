@@ -10,6 +10,7 @@ interface Props {
   isAuthenticated: boolean;
   isAdmin: boolean;
   onLoginPrompt: () => void;
+  onCommentsLoaded?: (comments: CommentItem[]) => void;
 }
 
 function timeAgo(dateStr: string): string {
@@ -29,6 +30,7 @@ export default function CommentSection({
   isAuthenticated,
   isAdmin,
   onLoginPrompt,
+  onCommentsLoaded,
 }: Props) {
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,12 +45,13 @@ export default function CommentSection({
     try {
       const res = await getComments(photoSlug);
       setComments(res.results);
+      onCommentsLoaded?.(res.results);
     } catch { /* */ }
     finally {
       setIsLoading(false);
       setLoaded(true);
     }
-  }, [photoSlug]);
+  }, [photoSlug, onCommentsLoaded]);
 
   // Reset when photo changes
   useEffect(() => {

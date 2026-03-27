@@ -45,6 +45,9 @@ class Photo(models.Model):
     is_trashed = models.BooleanField(default=False, db_index=True)
     trashed_at = models.DateTimeField(null=True, blank=True)
 
+    # Moderation
+    is_reported = models.BooleanField(default=False, db_index=True)
+
 
     def __str__(self):
         return self.title
@@ -152,6 +155,42 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.user} on {self.photo}'
+
+
+# === Reports ===
+
+class Report(models.Model):
+    """A user-submitted report on a photo and/or its user-generated content."""
+
+    STATUS_PENDING = 'pending'
+    STATUS_REVIEWED = 'reviewed'
+    STATUS_DISMISSED = 'dismissed'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_REVIEWED, 'Reviewed'),
+        (STATUS_DISMISSED, 'Dismissed'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    photo = models.ForeignKey('Photo', on_delete=models.CASCADE, related_name='reports')
+    # JSON list of {type, id?} — type in [image, tag, pop_tag, comment]
+    targets = models.JSONField()
+    reason = models.TextField(max_length=500, blank=True, default='')
+    reporter_ip = models.GenericIPAddressField(null=True, blank=True)
+    reporter_user = models.ForeignKey(
+        'auth.User', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='reports',
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['photo', 'status'])]
+
+    def __str__(self):
+        return f'Report on {self.photo} ({self.status})'
 
 
 # === Shared Layouts ===

@@ -24,6 +24,7 @@ import PhotoDetailView from './components/PhotoDetail/PhotoDetail';
 import LoginContent from './components/Auth/LoginContent';
 import UploadWindow from './components/Upload/UploadWindow';
 import TrashWindow from './components/Trash/TrashWindow';
+import ReportsWindow from './components/Reports/ReportsWindow';
 import AboutContent from './components/StaticPages/AboutContent';
 import ContactContent from './components/StaticPages/ContactContent';
 import MapContent from './components/StaticPages/MapPlaceholder';
@@ -119,7 +120,7 @@ function AppInner() {
     });
     selection.clear();
     try {
-      const grid = await photos.fetchGrid(categorySlug ?? null);
+      const grid = await photos.fetchGrid(categorySlug ?? null, 'desc', isAuthenticated);
       // Guest: merge locally-added photos on top of API results
       const folderId = categorySlug ? `cat-${categorySlug}` : null;
       const localPhotos = folderId ? desktop.getFolderContents(folderId) : [];
@@ -195,6 +196,13 @@ function AppInner() {
     wm.openWindow('Trash', 'trash', { trashPayload: { photos: [], next: null, count: 0, isLoading: true } });
   }, [wm, sound]);
 
+  const openReportsWindow = useCallback(() => {
+    const existing = wm.windows.find(w => w.windowType === 'reports');
+    if (existing) { wm.focusWindow(existing.id); if (existing.isMinimized) wm.minimizeWindow(existing.id); return; }
+    sound.play('windowOpen');
+    wm.openWindow('Reports', 'reports', {});
+  }, [wm, sound]);
+
   // === Icon handlers ===
 
   const handleOpenIcon = useCallback((icon: DesktopIconState) => {
@@ -264,7 +272,7 @@ function AppInner() {
       return;
     }
     try {
-      const grid = await photos.fetchGrid(slug, order);
+      const grid = await photos.fetchGrid(slug, order, isAuthenticated);
       const cat = categories.find(c => c.slug === slug);
       wm.updateWindow(win.id, {
         title: `${cat?.name ?? 'All Photos'} — ${grid.count} photos`,
@@ -284,7 +292,7 @@ function AppInner() {
         // Skip guest folder windows (they have no backend data to refresh)
         if (slug?.startsWith('guest-folder-')) continue;
         try {
-          const grid = await photos.fetchGrid(slug);
+          const grid = await photos.fetchGrid(slug, 'desc', isAuthenticated);
           const cat = categories.find(c => c.slug === slug);
           wm.updateWindow(win.id, {
             title: `${cat?.name ?? 'All Photos'} — ${grid.count} photos`,
@@ -601,6 +609,7 @@ function AppInner() {
             onSortChange={(order) => handleSortChange(win, order)}
             isDraggable={!selectMode}
             sourceWindowId={win.id}
+            showReportedBadges={isAuthenticated}
           />
         );
       case 'detail':
@@ -632,6 +641,8 @@ function AppInner() {
         return <UploadWindow categories={categories} onUploaded={() => refreshOpenWindows()} />;
       case 'trash':
         return <TrashWindow onChanged={() => refreshOpenWindows()} />;
+      case 'reports':
+        return <ReportsWindow onChanged={() => refreshOpenWindows()} />;
     }
   }
 
@@ -693,6 +704,7 @@ function AppInner() {
         onToggleGridSize={toggleGridSize}
         onOpenLogin={openLoginWindow}
         onOpenUpload={openUploadWindow}
+        onOpenReports={isAuthenticated ? openReportsWindow : undefined}
         onResetDesktop={desktop.reset}
         onToggleWidget={widgets.toggleWidget}
         openWidgetTypes={widgets.openWidgetTypes}

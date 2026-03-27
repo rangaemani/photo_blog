@@ -19,9 +19,10 @@ interface Props {
   onSortChange?: (order: 'asc' | 'desc') => void;
   isDraggable?: boolean;
   sourceWindowId?: string;
+  showReportedBadges?: boolean;
 }
 
-export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onHover, onHoverEnd, onContextMenu, selectable, isSelected, onToggleSelect, onRangeSelect, onTrashed, onSortChange, isDraggable, sourceWindowId }: Props) {
+export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onHover, onHoverEnd, onContextMenu, selectable, isSelected, onToggleSelect, onRangeSelect, onTrashed, onSortChange, isDraggable, sourceWindowId, showReportedBadges }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const orderedIds = useMemo(() => grid.photos.map(p => p.id), [grid.photos]);
   const handleRangeSelect = useCallback((id: string) => {
@@ -111,6 +112,7 @@ export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onH
             onTrashed={onTrashed}
             isDraggable={isDraggable}
             sourceWindowId={sourceWindowId}
+            showReportedBadge={showReportedBadges}
           />
         ))}
       </motion.div>

@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from django.conf import settings
 from django.db.models import Count
-from .models import Category, Photo, Comment, PopTag, Tag, UserProfile
+from .models import Category, Photo, Comment, PopTag, Report, Tag, UserProfile
 
 class CategorySerializer(serializers.ModelSerializer):
     photo_count = serializers.IntegerField(read_only=True)
@@ -17,7 +17,7 @@ class PhotoListSerializer(serializers.ModelSerializer):
 
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = Photo
-        fields = ['id', 'title', 'slug', 'thumbnail_url', 'width', 'height', 'category_slug', 'blurhash', 'taken_at', 'lat', 'lng']
+        fields = ['id', 'title', 'slug', 'thumbnail_url', 'width', 'height', 'category_slug', 'blurhash', 'taken_at', 'lat', 'lng', 'is_reported']
 
     def get_thumbnail_url(self, obj: Photo) -> str:
         return f'{settings.R2_BASE_URL}/{obj.thumbnail_key}'
@@ -136,3 +136,42 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentCreateSerializer(serializers.Serializer):
     text = serializers.CharField(max_length=500, min_length=1)
+
+
+class ReportTargetSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=['image', 'tag', 'pop_tag', 'comment'])
+    id = serializers.UUIDField(required=False)
+
+    def validate(self, attrs: dict) -> dict:
+        if attrs['type'] != 'image' and 'id' not in attrs:
+            raise serializers.ValidationError("'id' is required for non-image targets.")
+        if attrs['type'] == 'image' and 'id' in attrs:
+            raise serializers.ValidationError("'id' must not be provided for image targets.")
+        return attrs
+
+
+class ReportCreateSerializer(serializers.Serializer):
+    targets = ReportTargetSerializer(many=True)
+    reason = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+
+    def validate_targets(self, value: list) -> list:
+        if not value:
+            raise serializers.ValidationError("At least one target is required.")
+        return value
+
+
+class AdminReportSerializer(serializers.ModelSerializer):
+    photo_title = serializers.CharField(source='photo.title', read_only=True)
+    photo_slug = serializers.CharField(source='photo.slug', read_only=True)
+    photo_thumbnail_url = serializers.SerializerMethodField()
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = Report
+        fields = [
+            'id', 'photo_title', 'photo_slug', 'photo_thumbnail_url',
+            'targets', 'reason', 'reporter_ip', 'status', 'created_at', 'reviewed_at',
+        ]
+
+    def get_photo_thumbnail_url(self, obj: Report) -> str:
+        from django.conf import settings
+        return f'{settings.R2_BASE_URL}/{obj.photo.thumbnail_key}'

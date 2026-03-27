@@ -13,12 +13,13 @@ interface Props {
   onToggleGridSize: () => void;
   onOpenLogin: () => void;
   onOpenUpload: () => void;
+  onOpenReports?: () => void;
   onResetDesktop?: () => void;
   onToggleWidget: (type: WidgetType) => void;
   openWidgetTypes: WidgetType[];
 }
 
-export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onResetDesktop, onToggleWidget, openWidgetTypes }: Props) {
+export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onOpenReports, onResetDesktop, onToggleWidget, openWidgetTypes }: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [clock, setClock] = useState('');
 
@@ -55,6 +56,7 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
       ...(isAuthenticated
         ? [
             { label: 'Upload Photos...', action: onOpenUpload },
+            { label: 'Manage Reports...', action: onOpenReports },
             { label: '', divider: true },
             { label: 'Log Out', action: () => { logout(); closeMenu(); } },
           ]
@@ -90,7 +92,7 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
       { label: 'Share', action: () => onOpenStatic('share') },
       { label: 'GitHub', action: () => window.open('https://github.com/rangaemani', '_blank'), external: true },
     ],
-  }), [categories, isAuthenticated, logout, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onResetDesktop, ctrlKey]);
+  }), [categories, isAuthenticated, logout, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onOpenReports, onResetDesktop, ctrlKey]);
 
   return (
     <div style={styles.bar}>

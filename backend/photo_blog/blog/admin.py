@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 
-from .models import Category, Photo, PopTag, Reaction, Comment, Tag
+from .models import Category, Photo, PopTag, Reaction, Comment, Report, Tag
 from .pipeline import PipelineError, process_upload
 
 
@@ -95,3 +95,11 @@ class TagAdmin(admin.ModelAdmin):
 class PopTagAdmin(admin.ModelAdmin):
     list_display = ('label', 'user', 'photo', 'x', 'y', 'created_at')
     search_fields = ('label',)
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('photo', 'status', 'reporter_ip', 'created_at', 'reviewed_at')
+    list_filter = ('status',)
+    readonly_fields = ('id', 'photo', 'targets', 'reason', 'reporter_ip', 'reporter_user', 'created_at')
+    ordering = ('-created_at',)

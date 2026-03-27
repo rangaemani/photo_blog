@@ -7,15 +7,17 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Photo, Category
+from .models import Photo, Category, Report
 from .pipeline import PipelineError, delete_from_r2, process_upload
 from .serializers import (
+    AdminReportSerializer,
     CategoryCreateSerializer,
     CategorySerializer,
     PhotoDetailSerializer,
     PhotoListSerializer,
     PhotoPatchSerializer,
     PhotoUploadSerializer,
+    ReportCreateSerializer,
     TrashActionSerializer,
     TrashedPhotoSerializer,
 )
@@ -24,8 +26,11 @@ from .serializers import (
 class PhotoListView(viewsets.ReadOnlyModelViewSet[Photo]):
     lookup_field = 'slug'
 
-    def get_queryset(self):
-        qs = Photo.objects.select_related('category').filter(is_trashed=False)
+    def get_queryset(self):        
+        if self.request.user.is_staff:
+            qs = Photo.objects.select_related('category').filter(is_trashed=False)
+        else:
+            qs = Photo.objects.select_related('category').filter(is_trashed=False, is_reported=False)
         category_slug = self.request.query_params.get('category')
         if category_slug:
             qs = qs.filter(category__slug=category_slug)
@@ -178,6 +183,100 @@ class PhotoPatchView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     lookup_field = 'slug'
     http_method_names = ['patch']
+
+
+class ReportPhotoView(APIView):
+    """Submit a report on a photo. No authentication required."""
+    permission_classes = []  # AllowAny
+
+    RATE_LIMIT = 5
+
+    def _get_client_ip(self, request) -> str:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', '')
+
+    def post(self, request, slug):
+        try:
+            photo = Photo.objects.get(slug=slug, is_trashed=False)
+        except Photo.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        ip = self._get_client_ip(request)
+        one_hour_ago = timezone.now() - timezone.timedelta(hours=1)
+        recent_count = Report.objects.filter(reporter_ip=ip, created_at__gte=one_hour_ago).count()
+        if recent_count >= self.RATE_LIMIT:
+            return Response(
+                {'error': 'Too many reports. Please try again later.'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        serializer = ReportCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # UUIDs from validated_data are not JSON-serializable — stringify them
+        targets = [
+            {k: str(v) if hasattr(v, 'hex') else v for k, v in t.items()}
+            for t in serializer.validated_data['targets']
+        ]
+        report = Report.objects.create(
+            photo=photo,
+            targets=targets,
+            reason=serializer.validated_data['reason'],
+            reporter_ip=ip or None,
+            reporter_user=request.user if request.user.is_authenticated else None,
+        )
+
+        photo.is_reported = True
+        photo.save(update_fields=['is_reported'])
+
+        return Response({'id': str(report.id)}, status=status.HTTP_201_CREATED)
+
+
+class AdminReportListView(generics.ListAPIView):
+    """List all pending reports (admin only)."""
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminReportSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return Report.objects.select_related('photo').filter(
+            status=Report.STATUS_PENDING
+        ).order_by('-created_at')
+
+
+class AdminReportActionView(APIView):
+    """Dismiss or delete a reported photo (admin only)."""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            report = Report.objects.select_related('photo').get(pk=pk)
+        except Report.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        action = request.data.get('action')
+        if action not in ('dismiss', 'delete'):
+            return Response({'error': "action must be 'dismiss' or 'delete'"}, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+
+        if action == 'dismiss':
+            report.status = Report.STATUS_DISMISSED
+            report.reviewed_at = now
+            report.save(update_fields=['status', 'reviewed_at'])
+            report.photo.is_reported = False
+            report.photo.save(update_fields=['is_reported'])
+        else:  # delete
+            report.status = Report.STATUS_REVIEWED
+            report.reviewed_at = now
+            report.save(update_fields=['status', 'reviewed_at'])
+            report.photo.is_trashed = True
+            report.photo.trashed_at = now
+            report.photo.save(update_fields=['is_trashed', 'trashed_at'])
+
+        return Response({'ok': True})
 
 
 class CategoryDeleteView(APIView):

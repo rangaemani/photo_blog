@@ -20,9 +20,10 @@ interface Props {
   onTrashed?: () => void;
   isDraggable?: boolean;
   sourceWindowId?: string;
+  showReportedBadge?: boolean;
 }
 
-export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, onContextMenu, selectable, selected, onToggleSelect, onRangeSelect, onTrashed, isDraggable, sourceWindowId }: Props) {
+export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, onContextMenu, selectable, selected, onToggleSelect, onRangeSelect, onTrashed, isDraggable, sourceWindowId, showReportedBadge }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -68,6 +69,8 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
     return createContextMenuHandler(options, onContextMenu);
   }, [photo.id, photo.slug, photo.thumbnail_url, onClick, selectable, onTrashed, onContextMenu]);
 
+  console.log('[PhotoCell]', photo.slug, { showReportedBadge, is_reported: photo.is_reported });
+
   return (
     <motion.div
       variants={{
@@ -98,6 +101,11 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
       onContextMenu={handleContext}
     >
       <div style={{ position: 'relative', width: '100%', aspectRatio: `${photo.width} / ${photo.height}` }}>
+        {showReportedBadge && photo.is_reported && (
+          <div style={styles.reportedBadge} title="Reported — pending review">
+            ⚠
+          </div>
+        )}
         {selectable && (
           <div
             style={styles.checkbox}
@@ -173,5 +181,28 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#fff',
     textShadow: '0 1px 3px rgba(0,0,0,0.6)',
     cursor: 'pointer',
+  },
+  reportedBadge: {
+    position: 'absolute' as const,
+    top: 4,
+    right: 4,
+    zIndex: 3,
+    fontSize: 14,
+    lineHeight: 1,
+    // Win98 yellow-on-dark warning look
+    background: '#ffdd00',
+    color: '#333',
+    width: 18,
+    height: 18,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTop: '1px solid #fff',
+    borderLeft: '1px solid #fff',
+    borderBottom: '1px solid #888',
+    borderRight: '1px solid #888',
+    boxShadow: '1px 1px 0 rgba(0,0,0,0.4)',
+    cursor: 'default',
+    userSelect: 'none',
   },
 };

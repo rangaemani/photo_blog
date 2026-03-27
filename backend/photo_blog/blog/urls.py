@@ -5,12 +5,15 @@ from .layout_views import LayoutCreateView, LayoutRetrieveView
 from .interaction_views import ToggleReactionView, CommentListCreateView, CommentDeleteView, TagAddView, TagRemoveView, PopTagAddView, PopTagRemoveView
 from .otp_views import OTPRequestView, OTPVerifyView, OTPSetNameView
 from .views import (
+    AdminReportActionView,
+    AdminReportListView,
     CategoryCreateView,
     CategoryDeleteView,
     CategoryviewSet,
     PhotoListView,
     PhotoPatchView,
     PhotoUploadView,
+    ReportPhotoView,
     TrashEmptyView,
     TrashPurgeView,
     TrashRestoreView,
@@ -46,6 +49,9 @@ urlpatterns = [
     path('photos/trash/restore/', TrashRestoreView.as_view(), name='photo-trash-restore'),
     path('photos/trash/purge/', TrashPurgeView.as_view(), name='photo-trash-purge'),
     path('photos/trash/empty/', TrashEmptyView.as_view(), name='photo-trash-empty'),
+    path('photos/<slug:slug>/report/', ReportPhotoView.as_view(), name='photo-report'),
+    path('admin/reports/', AdminReportListView.as_view(), name='report-list'),
+    path('admin/reports/<uuid:pk>/action/', AdminReportActionView.as_view(), name='report-action'),
     path('layouts/', LayoutCreateView.as_view(), name='layout-create'),
     path('layouts/<slug:slug>/', LayoutRetrieveView.as_view(), name='layout-retrieve'),
 ] + router.urls

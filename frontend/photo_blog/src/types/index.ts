@@ -48,6 +48,7 @@ export interface PhotoListItem {
   blurhash: string;
   lat: number | null;
   lng: number | null;
+  is_reported: boolean;
 }
 
 export interface PhotoDetail extends PhotoListItem {
@@ -164,7 +165,7 @@ export interface ActiveDrag {
   sourceWindowId?: string;
 }
 
-export type WindowContentType = 'grid' | 'detail' | 'static' | 'login' | 'upload' | 'trash';
+export type WindowContentType = 'grid' | 'detail' | 'static' | 'login' | 'upload' | 'trash' | 'reports';
 
 // === Widget types ===
 

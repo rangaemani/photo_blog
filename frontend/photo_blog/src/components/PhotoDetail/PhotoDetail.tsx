@@ -11,11 +11,13 @@ import InteractionBar from "./InteractionBar";
 import TagBar from "./TagBar";
 import PopTagOverlay from "./PopTagOverlay";
 import CommentSection from "./CommentSection";
+import ReportOverlay from "./ReportOverlay";
 import {
   createContextMenuHandler,
   type ContextMenuOption,
 } from "../../utils/contextMenu";
 import { trashPhotos } from "../../api/client";
+import type { CommentItem } from "../../types";
 
 const MAT_SIDE = 28;
 const MAT_TOP = 28;
@@ -59,6 +61,8 @@ export default function PhotoDetail({
   const [userReactions, setUserReactions] = useState<string[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);
   const [popTags, setPopTags] = useState<PopTagItem[]>([]);
+  const [loadedComments, setLoadedComments] = useState<CommentItem[]>([]);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     if (photo) {
@@ -84,6 +88,8 @@ export default function PhotoDetail({
   useEffect(() => {
     setThumbLoaded(false);
     setOriginalLoaded(false);
+    setLoadedComments([]);
+    setShowReport(false);
   }, [photo?.slug]);
 
 
@@ -181,7 +187,11 @@ export default function PhotoDetail({
         isAuthenticated={isAuthenticated}
         isAdmin={selectable ?? false}
         onLoginPrompt={loginPrompt}
+        onCommentsLoaded={setLoadedComments}
       />
+      <button style={styles.reportLink} onClick={() => setShowReport(true)}>
+        Report
+      </button>
     </>
   );
 
@@ -221,6 +231,16 @@ export default function PhotoDetail({
 
   return (
     <div style={styles.outer}>
+      {showReport && (
+        <ReportOverlay
+          photoSlug={photo.slug}
+          tags={tags}
+          popTags={popTags}
+          comments={loadedComments}
+          onClose={() => setShowReport(false)}
+          onReported={() => setShowReport(false)}
+        />
+      )}
       {isWideMode ? (
         /* Wide mode: photo left column, scrollable meta right */
         <div style={styles.wide}>
@@ -345,5 +365,15 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 6,
     lineHeight: 1.5,
     marginBottom: 0,
+  },
+  reportLink: {
+    background: 'none',
+    border: 'none',
+    padding: '4px 0',
+    fontSize: 11,
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    alignSelf: 'flex-start',
   },
 };

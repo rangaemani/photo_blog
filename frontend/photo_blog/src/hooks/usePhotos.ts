@@ -6,8 +6,8 @@ import type { PhotoListItem, PhotoDetail, GridPayload } from '../types';
 const gridCache = new Map<string, { photos: PhotoListItem[]; next: string | null; count: number }>();
 const detailCache = new Map<string, PhotoDetail>();
 
-function cacheKey(slug: string | null, order: 'asc' | 'desc' = 'desc') {
-  return `${slug ?? '__all__'}:${order}`;
+function cacheKey(slug: string | null, order: 'asc' | 'desc' = 'desc', includeReported = false) {
+  return `${slug ?? '__all__'}:${order}${includeReported ? ':reported' : ''}`;
 }
 
 /** Provides cached photo data fetching — grid listings, pagination, and detail views.
@@ -16,14 +16,14 @@ function cacheKey(slug: string | null, order: 'asc' | 'desc' = 'desc') {
 export function usePhotos() {
   const loadingRef = useRef(new Set<string>());
 
-  const fetchGrid = useCallback(async (categorySlug: string | null, order: 'asc' | 'desc' = 'desc'): Promise<GridPayload> => {
-    const key = cacheKey(categorySlug, order);
+  const fetchGrid = useCallback(async (categorySlug: string | null, order: 'asc' | 'desc' = 'desc', includeReported = false): Promise<GridPayload> => {
+    const key = cacheKey(categorySlug, order, includeReported);
     const cached = gridCache.get(key);
     if (cached) {
       return { categorySlug, photos: cached.photos, next: cached.next, count: cached.count, isLoadingMore: false, order };
     }
 
-    const data = await getPhotos(categorySlug ?? undefined, order);
+    const data = await getPhotos(categorySlug ?? undefined, order, includeReported);
     const payload: GridPayload = {
       categorySlug,
       photos: data.results,

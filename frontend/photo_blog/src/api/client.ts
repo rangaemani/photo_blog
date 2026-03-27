@@ -109,10 +109,11 @@ export function setDisplayName(display_name: string): Promise<{ ok: boolean; use
  * @param page - Page number for pagination.
  * @returns Paginated list of photo summaries.
  */
-export function getPhotos(categorySlug?: string, order: 'asc' | 'desc' = 'desc'): Promise<PaginatedResponse<PhotoListItem>> {
+export function getPhotos(categorySlug?: string, order: 'asc' | 'desc' = 'desc', includeReported = false): Promise<PaginatedResponse<PhotoListItem>> {
   const params = new URLSearchParams();
   if (categorySlug) params.set('category', categorySlug);
   params.set('order', order);
+  if (includeReported) params.set('include_reported', 'true');
   return fetchJSON(`${API_BASE}/photos/?${params.toString()}`);
 }
 
@@ -322,6 +323,38 @@ export function addPopTag(slug: string, label: string, x: number, y: number): Pr
 
 export function removePopTag(slug: string, tagId: string): Promise<{ pop_tags: PopTagItem[] }> {
   return deleteJSON(`${API_BASE}/photos/${slug}/pop-tags/${tagId}/`);
+}
+
+// === Reports ===
+
+export interface ReportTarget {
+  type: 'image' | 'tag' | 'pop_tag' | 'comment';
+  id?: string;
+}
+
+export interface AdminReport {
+  id: string;
+  photo_title: string;
+  photo_slug: string;
+  photo_thumbnail_url: string;
+  targets: ReportTarget[];
+  reason: string;
+  reporter_ip: string | null;
+  status: 'pending' | 'reviewed' | 'dismissed';
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export function reportPhoto(slug: string, targets: ReportTarget[], reason: string): Promise<{ id: string }> {
+  return postJSON(`${API_BASE}/photos/${slug}/report/`, { targets, reason });
+}
+
+export function getAdminReports(): Promise<AdminReport[]> {
+  return fetchJSON(`${API_BASE}/admin/reports/`);
+}
+
+export function actionReport(id: string, action: 'dismiss' | 'delete'): Promise<{ ok: boolean }> {
+  return postJSON(`${API_BASE}/admin/reports/${id}/action/`, { action });
 }
 
 // === Shared Layouts ===
