@@ -17,3 +17,4 @@ node_modules/
 # DB stuff
 Thumbs.db
 backend/photo_blog/prod_dump.pgdump
+.claude/settings.local.json
