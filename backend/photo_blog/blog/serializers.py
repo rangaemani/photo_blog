@@ -85,7 +85,7 @@ class PhotoUploadSerializer(serializers.Serializer):
         return value
 
 
-class PhotoPatchSerializer(serializers.ModelSerializer):
+class PhotoCategoryPatchSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
@@ -94,6 +94,12 @@ class PhotoPatchSerializer(serializers.ModelSerializer):
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = Photo
         fields = ['category']
+
+class PhotoGeotagPatchSerializer(serializers.ModelSerializer):
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = Photo
+        fields = ['lat', 'lng']
+        extra_kwargs = {'lat': {'required': False, 'allow_null': True}, 'lng': {'required': False, 'allow_null': True}}
 
 
 class CategoryCreateSerializer(serializers.ModelSerializer):

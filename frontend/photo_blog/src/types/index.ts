@@ -65,6 +65,8 @@ export interface PhotoDetail extends PhotoListItem {
   reaction_summary: Record<string, number>;
   user_reactions: string[];
   comment_count: number;
+  lat: number | null;
+  lng: number | null;
   tags: TagItem[];
   pop_tags: PopTagItem[];
 }

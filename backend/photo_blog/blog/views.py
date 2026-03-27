@@ -4,6 +4,7 @@ from django.db.models import Count
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import generics, status, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,8 +15,9 @@ from .serializers import (
     CategoryCreateSerializer,
     CategorySerializer,
     PhotoDetailSerializer,
+    PhotoGeotagPatchSerializer,
     PhotoListSerializer,
-    PhotoPatchSerializer,
+    PhotoCategoryPatchSerializer,
     PhotoUploadSerializer,
     ReportCreateSerializer,
     TrashActionSerializer,
@@ -27,7 +29,7 @@ class PhotoListView(viewsets.ReadOnlyModelViewSet[Photo]):
     lookup_field = 'slug'
 
     def get_queryset(self):        
-        if self.request.user.is_staff:
+        if self.request.user.is_staff: # pyright: ignore[reportAttributeAccessIssue]
             qs = Photo.objects.select_related('category').filter(is_trashed=False)
         else:
             qs = Photo.objects.select_related('category').filter(is_trashed=False, is_reported=False)
@@ -176,14 +178,26 @@ class CategoryCreateView(generics.CreateAPIView):
     permission_classes = [IsAdminUser]
 
 
-class PhotoPatchView(generics.UpdateAPIView):
-    """Partial update a photo (e.g. change category via drag-drop)."""
+class PhotoCategoryPatchView(generics.UpdateAPIView):
+    """Partial update a photo's category via drag-drop"""
     queryset = Photo.objects.all()
-    serializer_class = PhotoPatchSerializer
+    serializer_class = PhotoCategoryPatchSerializer
     permission_classes = [IsAdminUser]
     lookup_field = 'slug'
     http_method_names = ['patch']
 
+class PhotoGeotagPatchView(generics.UpdateAPIView):
+    """Partial update a photo's geodata"""
+    queryset = Photo.objects.all()
+    serializer_class = PhotoGeotagPatchSerializer
+    lookup_field = 'slug'
+    http_method_names = ['patch']
+    
+    def perform_update(self, serializer):
+        photo: Photo = self.get_object()
+        if (photo.lat is not None or photo.lng is not None) and not self.request.user.is_staff:             # pyright: ignore[reportAttributeAccessIssue]
+            raise PermissionDenied("Geotag already exists on photo")
+        serializer.save()
 
 class ReportPhotoView(APIView):
     """Submit a report on a photo. No authentication required."""
@@ -204,7 +218,7 @@ class ReportPhotoView(APIView):
             return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
         ip = self._get_client_ip(request)
-        one_hour_ago = timezone.now() - timezone.timedelta(hours=1)
+        one_hour_ago = timezone.now() - timezone.timedelta(hours=1) # pyright: ignore[reportAttributeAccessIssue]
         recent_count = Report.objects.filter(reporter_ip=ip, created_at__gte=one_hour_ago).count()
         if recent_count >= self.RATE_LIMIT:
             return Response(

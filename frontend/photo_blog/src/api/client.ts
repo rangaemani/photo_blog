@@ -197,7 +197,7 @@ export function patchPhotoCategory(slug: string, categorySlug: string): Promise<
 }
 
 export function patchPhotoLocation(slug: string, lat: number | null, lng: number | null): Promise<{ lat: number | null; lng: number | null }> {
-  return patchJSON(`${API_BASE}/photos/${slug}/patch/`, { lat, lng });
+  return patchJSON(`${API_BASE}/photos/${slug}/geotag/`, { lat, lng });
 }
 
 

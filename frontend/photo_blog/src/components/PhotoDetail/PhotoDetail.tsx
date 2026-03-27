@@ -18,6 +18,7 @@ import {
 } from "../../utils/contextMenu";
 import { trashPhotos } from "../../api/client";
 import type { CommentItem } from "../../types";
+import GeotagPicker from "./GeotagPicker";
 
 const MAT_SIDE = 28;
 const MAT_TOP = 28;
@@ -57,12 +58,26 @@ export default function PhotoDetail({
   const loginPrompt = useCallback(onLoginPrompt ?? (() => {}), [onLoginPrompt]); // stable fallback
   const [thumbLoaded, setThumbLoaded] = useState(false);
   const [originalLoaded, setOriginalLoaded] = useState(false);
-  const [reactionSummary, setReactionSummary] = useState<Record<string, number>>({});
+  const [reactionSummary, setReactionSummary] = useState<
+    Record<string, number>
+  >({});
   const [userReactions, setUserReactions] = useState<string[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);
   const [popTags, setPopTags] = useState<PopTagItem[]>([]);
   const [loadedComments, setLoadedComments] = useState<CommentItem[]>([]);
   const [showReport, setShowReport] = useState(false);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+
+  const showGeotag = isAuthenticated && (lat === null || selectable);
+
+  const handleReactionChange = useCallback(
+    (summary: Record<string, number>, reactions: string[]) => {
+      setReactionSummary(summary);
+      setUserReactions(reactions);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (photo) {
@@ -73,15 +88,18 @@ export default function PhotoDetail({
     }
   }, [photo]);
 
-  const handleReactionChange = useCallback((summary: Record<string, number>, reactions: string[]) => {
-    setReactionSummary(summary);
-    setUserReactions(reactions);
-  }, []);
-
   useEffect(() => {
     if (canvasRef.current && photo?.blurhash) {
-      try { drawBlurhash(canvasRef.current, photo.blurhash, photo.width, photo.height); }
-      catch { /* ignore */ }
+      try {
+        drawBlurhash(
+          canvasRef.current,
+          photo.blurhash,
+          photo.width,
+          photo.height,
+        );
+      } catch {
+        /* ignore */
+      }
     }
   }, [photo?.blurhash, photo?.width, photo?.height]);
 
@@ -92,21 +110,54 @@ export default function PhotoDetail({
     setShowReport(false);
   }, [photo?.slug]);
 
+  useEffect(() => {
+    if (photo) {
+      setLat(photo.lat);
+      setLng(photo.lng);
+    }
+  }, [photo?.slug]);
 
   const handleContext = useMemo(() => {
     if (!photo || !onContextMenu) return undefined;
     const options: ContextMenuOption[] = [
-      { label: "View Original", action: () => window.open(photo.thumbnail_url.replace("/thumbnails/", "/originals/").replace(".webp", ".jpg"), "_blank") },
-      { label: "Copy Image URL", action: () => navigator.clipboard.writeText(photo.thumbnail_url) },
+      {
+        label: "View Original",
+        action: () =>
+          window.open(
+            photo.thumbnail_url
+              .replace("/thumbnails/", "/originals/")
+              .replace(".webp", ".jpg"),
+            "_blank",
+          ),
+      },
+      {
+        label: "Copy Image URL",
+        action: () => navigator.clipboard.writeText(photo.thumbnail_url),
+      },
       { label: "", divider: true, visible: selectable },
-      { label: "Move to Trash", action: () => { trashPhotos([photo.id]).then(() => onTrashed?.()); }, visible: selectable },
+      {
+        label: "Move to Trash",
+        action: () => {
+          trashPhotos([photo.id]).then(() => onTrashed?.());
+        },
+        visible: selectable,
+      },
     ];
     return createContextMenuHandler(options, onContextMenu);
   }, [photo, selectable, onTrashed, onContextMenu]);
 
   if (isLoading || !photo) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", background: "var(--pale-slate)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          color: "var(--text-muted)",
+          background: "var(--pale-slate)",
+        }}
+      >
         Loading...
       </div>
     );
@@ -136,19 +187,33 @@ export default function PhotoDetail({
     <>
       <canvas
         ref={canvasRef}
-        style={{ ...styles.imgLayer, opacity: thumbLoaded || originalLoaded ? 0 : 1, transition: "opacity 200ms" }}
+        style={{
+          ...styles.imgLayer,
+          opacity: thumbLoaded || originalLoaded ? 0 : 1,
+          transition: "opacity 200ms",
+        }}
       />
       <img
         src={photo.thumbnail_url}
         alt=""
         onLoad={() => setThumbLoaded(true)}
-        style={{ ...styles.imgLayer, objectFit: "cover", opacity: thumbLoaded && !originalLoaded ? 1 : 0, transition: "opacity 200ms" }}
+        style={{
+          ...styles.imgLayer,
+          objectFit: "cover",
+          opacity: thumbLoaded && !originalLoaded ? 1 : 0,
+          transition: "opacity 200ms",
+        }}
       />
       <img
         src={photo.original_url}
         alt={photo.title}
         onLoad={() => setOriginalLoaded(true)}
-        style={{ ...styles.imgLayer, objectFit: "cover", opacity: originalLoaded ? 1 : 0, transition: "opacity 200ms" }}
+        style={{
+          ...styles.imgLayer,
+          objectFit: "cover",
+          opacity: originalLoaded ? 1 : 0,
+          transition: "opacity 200ms",
+        }}
       />
       <PopTagOverlay
         photoSlug={photo.slug}
@@ -202,13 +267,28 @@ export default function PhotoDetail({
     photo.aperture ||
     photo.shutter_speed ||
     photo.iso ||
-    photo.taken_at
+    photo.taken_at,
   );
 
   const metaPanel = (
     <div style={styles.meta}>
-      <h2 style={styles.title}>{photo.title}.{photo.original_url.split('.').pop()}</h2>
-      {photo.description && <p style={styles.description}>{photo.description}</p>}
+      <h2 style={styles.title}>
+        {photo.title}.{photo.original_url.split(".").pop()}
+      </h2>
+      {photo.description && (
+        <p style={styles.description}>{photo.description}</p>
+      )}
+      {showGeotag && (
+            <GeotagPicker
+              photoSlug={photo.slug}
+              currentLat={lat}
+              currentLng={lng}
+              onSaved={(newLat, newLng) => {
+                setLat(newLat);
+                setLng(newLng);
+              }}
+            />
+          )}
       {!isWideMode && <ExifStrip photo={photo} />}
       {socialSection}
     </div>
@@ -218,12 +298,24 @@ export default function PhotoDetail({
     <div style={styles.gallery}>
       <div style={styles.frameWrap}>
         <div style={styles.frame}>
-          <div style={{ ...styles.imageArea, ...(imgW ? { width: imgW, height: imgH } : { aspectRatio: `${aspect}` }) }} onContextMenu={handleContext}>
+          <div
+            style={{
+              ...styles.imageArea,
+              ...(imgW
+                ? { width: imgW, height: imgH }
+                : { aspectRatio: `${aspect}` }),
+            }}
+            onContextMenu={handleContext}
+          >
             <div style={styles.fillet} />
             {imageStack}
           </div>
           <ExifStrip photo={photo} padded />
-          {hasExif ? <div style = {{height: 10}}/> : <div style={{ height: 26 }} />}
+          {hasExif ? (
+            <div style={{ height: 10 }} />
+          ) : (
+            <div style={{ height: 26 }} />
+          )}          
         </div>
       </div>
     </div>
@@ -246,8 +338,23 @@ export default function PhotoDetail({
         <div style={styles.wide}>
           {framedPhoto}
           <div style={styles.sidePanel}>
-            <h2 style={styles.title}>{photo.title}.{photo.original_url.split('.').pop()}</h2>
-            {photo.description && <p style={styles.description}>{photo.description}</p>}
+            <h2 style={styles.title}>
+              {photo.title}.{photo.original_url.split(".").pop()}
+            </h2>
+            {photo.description && (
+              <p style={styles.description}>{photo.description}</p>
+            )}
+            {showGeotag && (
+            <GeotagPicker
+              photoSlug={photo.slug}
+              currentLat={lat}
+              currentLng={lng}
+              onSaved={(newLat, newLng) => {
+                setLat(newLat);
+                setLng(newLng);
+              }}
+            />
+          )}
             {socialSection}
           </div>
         </div>
@@ -367,13 +474,13 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 0,
   },
   reportLink: {
-    background: 'none',
-    border: 'none',
-    padding: '4px 0',
+    background: "none",
+    border: "none",
+    padding: "4px 0",
     fontSize: 11,
-    color: 'var(--text-muted)',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-    alignSelf: 'flex-start',
+    color: "var(--text-muted)",
+    cursor: "pointer",
+    textDecoration: "underline",
+    alignSelf: "flex-start",
   },
 };
