@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   onSuccess: () => void;
@@ -175,7 +176,7 @@ export default function LoginContent({ onSuccess }: Props) {
           {mode === 'otp-identifier' && (
             <>
               <div style={styles.header}>
-                <span style={styles.icon}>&#x2709;&#xFE0F;</span>
+                <img src={icons.sm.contact} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />
                 <span style={styles.title}>Sign In</span>
               </div>
               <p style={styles.subtitle}>Enter your email or phone number to receive a verification code.</p>
@@ -217,7 +218,7 @@ export default function LoginContent({ onSuccess }: Props) {
           {mode === 'otp-code' && (
             <>
               <div style={styles.header}>
-                <span style={styles.icon}>&#x1F4E8;</span>
+                <img src={icons.sm.envelopeOpen} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />
                 <span style={styles.title}>Enter Code</span>
               </div>
               <p style={styles.subtitle}>
@@ -278,7 +279,7 @@ export default function LoginContent({ onSuccess }: Props) {
           {mode === 'otp-name' && (
             <>
               <div style={styles.header}>
-                <span style={styles.icon}>&#x1F44B;</span>
+                <img src={icons.sm.login} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />
                 <span style={styles.title}>Welcome!</span>
               </div>
               <p style={styles.subtitle}>Choose a display name for your desktop.</p>

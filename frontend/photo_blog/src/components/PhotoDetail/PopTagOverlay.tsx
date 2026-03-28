@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addPopTag, removePopTag } from '../../api/client';
 import type { PopTagItem } from '../../types';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   photoSlug: string;
@@ -99,7 +100,7 @@ export default function PopTagOverlay({
         onClick={(e) => { e.stopPropagation(); handleToggleMode(); }}
         title={taggingMode ? 'Cancel tagging' : 'Add pop tag'}
       >
-        {taggingMode ? '✕' : '📌'}
+        {taggingMode ? '✕' : <img src={icons.sm.pin} alt="Tag" style={{ width: 14, height: 14, imageRendering: 'pixelated' }} />}
       </button>
 
       {/* Existing pop tags */}

@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { icons } from '../lib/win98Icons';
 
 interface Props {
   visible: boolean;
@@ -21,7 +22,7 @@ export default function LoadingScreen({ visible }: Props) {
             transition={{ duration: 0.3, delay: 0.1 }}
             style={styles.pill}
           >
-            <span style={{ fontSize: 16 }}>&#9203;</span>
+            <img src={icons.sm.hourglass} alt="" style={{ width: 16, height: 16, imageRendering: 'pixelated' }} />
             <span style={styles.text}>Developing photos...</span>
           </motion.div>
         </motion.div>

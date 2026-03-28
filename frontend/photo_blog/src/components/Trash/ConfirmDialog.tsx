@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   message: string;
@@ -50,7 +51,7 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.05 }}
         >
-          ⚠️
+          <img src={icons.lg.warning} alt="Warning" style={{ width: 32, height: 32, imageRendering: 'pixelated' }} />
         </motion.div>
         <p style={styles.message}>{message}</p>
         <div style={styles.buttons}>
@@ -85,8 +86,9 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center' as const,
   },
   icon: {
-    fontSize: 28,
     marginBottom: 8,
+    display: 'flex',
+    justifyContent: 'center',
   },
   message: {
     fontSize: 13,

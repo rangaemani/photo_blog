@@ -1,4 +1,5 @@
 import Throbber from '../Throbber';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   onBack?: () => void;
@@ -69,7 +70,7 @@ export default function WindowToolbar({
                   disabled={selectedCount === 0}
                   title="Download selected photos"
                 >
-                  ⬇ Download
+                  <img src={icons.sm.download} alt="" style={{ width: 12, height: 12, imageRendering: 'pixelated' }} /> Download
                 </button>
               )}
               {isAdmin && (

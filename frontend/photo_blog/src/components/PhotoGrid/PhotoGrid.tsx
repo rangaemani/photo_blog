@@ -2,6 +2,7 @@ import { useRef, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { GridPayload, ContextMenuState } from '../../types';
 import PhotoCell from './PhotoCell';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   grid: GridPayload;
@@ -48,7 +49,7 @@ export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onH
   if (grid.photos.length === 0 && !grid.isLoadingMore) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
-        <span style={{ fontSize: 48 }}>📷</span>
+        <img src={icons.lg.grid} alt="" style={{ width: 48, height: 48, imageRendering: 'pixelated', opacity: 0.5 }} />
         <p style={{ marginTop: 12, fontSize: 14 }}>No photos yet</p>
       </div>
     );

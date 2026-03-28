@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import type { PhotoListItem, ContextMenuState } from '../../types';
 import { trashPhotos } from '../../api/client';
 import { drawBlurhash } from '../../utils/blurhash';
+import { icons } from '../../lib/win98Icons';
 import { formatDate } from '../../utils/exif';
 import { createContextMenuHandler, type ContextMenuOption } from '../../utils/contextMenu';
 import { useDragSource } from '../../hooks/useDragSource';
@@ -103,7 +104,7 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
       <div style={{ position: 'relative', width: '100%', aspectRatio: `${photo.width} / ${photo.height}` }}>
         {showReportedBadge && photo.is_reported && (
           <div style={styles.reportedBadge} title="Reported — pending review">
-            ⚠
+            <img src={icons.sm.warning} alt="Reported" style={{ width: 14, height: 14, imageRendering: 'pixelated' }} />
           </div>
         )}
         {selectable && (
@@ -111,7 +112,10 @@ export default memo(function PhotoCell({ photo, onClick, onHover, onHoverEnd, on
             style={styles.checkbox}
             onClick={(e) => { e.stopPropagation(); onToggleSelect?.(photo.id); }}
           >
-            {selected ? '☑' : '☐'}
+            {selected
+              ? <img src={icons.sm.check} alt="Selected" style={{ width: 14, height: 14, imageRendering: 'pixelated' }} />
+              : <span style={{ fontSize: 14, lineHeight: 1 }}>☐</span>
+            }
           </div>
         )}
         <canvas

@@ -17,6 +17,7 @@ const TYPE_ICONS: Record<WindowContentType, string> = {
   login: icons.sm.login,
   upload: icons.sm.upload,
   trash: icons.sm.trash,
+  reports: icons.sm.reports,
 };
 
 export default function WindowTitleBar({ title, windowType, onClose, onMinimize, onMaximize, onMouseDown }: Props) {

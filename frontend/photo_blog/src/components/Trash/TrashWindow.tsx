@@ -7,6 +7,7 @@ import { drawBlurhash } from '../../utils/blurhash';
 import { useSoundContext } from '../../contexts/SoundContext';
 import ConfirmDialog from './ConfirmDialog';
 import Throbber from '../Throbber';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   onChanged: () => void;
@@ -79,7 +80,7 @@ export default function TrashWindow({ onChanged }: Props) {
   if (photos.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
-        <span style={{ fontSize: 48 }}>🗑️</span>
+        <img src={icons.lg.recycleEmpty} alt="" style={{ width: 48, height: 48, imageRendering: 'pixelated' }} />
         <p style={{ marginTop: 12, fontSize: 14 }}>Trash is empty</p>
       </div>
     );
@@ -181,7 +182,10 @@ function TrashCell({ photo, selected, onToggle }: { photo: TrashedPhotoListItem;
           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0, opacity: loaded ? 1 : 0, transition: 'opacity 200ms' }}
         />
         <div style={{ position: 'absolute', top: 4, left: 4, fontSize: 16, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          {selected ? '☑' : '☐'}
+          {selected
+            ? <img src={icons.sm.check} alt="Selected" style={{ width: 14, height: 14, imageRendering: 'pixelated' }} />
+            : <span style={{ fontSize: 14, lineHeight: 1 }}>☐</span>
+          }
         </div>
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

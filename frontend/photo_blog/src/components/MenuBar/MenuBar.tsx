@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import type { Category, WidgetType } from '../../types';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useSoundContext } from '../../contexts/SoundContext';
+import { icons } from '../../lib/win98Icons';
 import MenuDropdown from './MenuDropdown';
 
 interface Props {
@@ -97,7 +98,7 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
   return (
     <div style={styles.bar}>
       <div style={styles.left}>
-        <span style={styles.logo}>📟</span>
+        <img src={icons.sm.logo} alt="" style={{ width: 16, height: 16, imageRendering: 'pixelated' }} />
         {Object.keys(menus).map(name => (
           <div key={name} style={{ position: 'relative' }}>
             <button
@@ -130,7 +131,7 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
           onClick={sound.toggleMute}
           title={sound.muted ? 'Unmute sounds' : 'Mute sounds'}
         >
-          {sound.muted ? '\uD83D\uDD07' : '\uD83D\uDD0A'}
+          <img src={sound.muted ? icons.sm.speakerMuted : icons.sm.speaker} alt={sound.muted ? 'Muted' : 'Sound on'} style={{ width: 14, height: 14, imageRendering: 'pixelated' }} />
         </button>
         <span style={styles.clock}>{clock}</span>
       </div>

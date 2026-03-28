@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAdminReports, actionReport, type AdminReport } from '../../api/client';
+import { icons } from '../../lib/win98Icons';
 
 interface Props {
   onChanged: () => void;
@@ -132,7 +133,7 @@ export default function ReportsWindow({ onChanged }: Props) {
   if (reports.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 8, color: 'var(--text-muted)' }}>
-        <span style={{ fontSize: 32 }}>📋</span>
+        <img src={icons.lg.warning} alt="" style={{ width: 32, height: 32, imageRendering: 'pixelated', opacity: 0.4 }} />
         <span style={{ fontSize: 13 }}>No pending reports</span>
       </div>
     );
@@ -184,7 +185,10 @@ export default function ReportsWindow({ onChanged }: Props) {
                 />
                 <div style={styles.cardBody}>
                   <div style={styles.cardTitle}>{report.photo_title}</div>
-                  <div style={styles.cardMeta}>⚠ {targetLabel(report.targets)}</div>
+                  <div style={{ ...styles.cardMeta, display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <img src={icons.sm.warning} alt="" style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />
+                    {targetLabel(report.targets)}
+                  </div>
                   {report.reason && (
                     <div style={styles.cardReason}>"{report.reason.slice(0, 40)}{report.reason.length > 40 ? '…' : ''}"</div>
                   )}
@@ -212,7 +216,10 @@ export default function ReportsWindow({ onChanged }: Props) {
           <img src={drag.report.photo_thumbnail_url} alt={drag.report.photo_title} style={styles.thumb} draggable={false} />
           <div style={styles.cardBody}>
             <div style={styles.cardTitle}>{drag.report.photo_title}</div>
-            <div style={styles.cardMeta}>⚠ {targetLabel(drag.report.targets)}</div>
+            <div style={{ ...styles.cardMeta, display: 'flex', alignItems: 'center', gap: 3 }}>
+              <img src={icons.sm.warning} alt="" style={{ width: 12, height: 12, imageRendering: 'pixelated' }} />
+              {targetLabel(drag.report.targets)}
+            </div>
           </div>
         </div>
       )}
