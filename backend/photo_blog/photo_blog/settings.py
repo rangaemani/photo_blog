@@ -68,6 +68,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        'photo_download': '50/hour',
+    },
 }
 
 ROOT_URLCONF = 'photo_blog.urls'

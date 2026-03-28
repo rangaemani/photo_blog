@@ -86,10 +86,7 @@ export default function AboutContent() {
             <li>Removal of photos or tags involving you</li>
           </ul>
           <p style={styles.pp}>I will make a good-faith effort to respond to all requests.</p>
-          <h3 style={styles.h3}>9. Contact</h3>
-          <p style={styles.pp}>
-            For privacy-related requests or concerns, contact: [your email]
-          </p>
+          <h3 style={styles.h3}>9. Contact</h3>          
         </div>
       </motion.div>
     </motion.div>

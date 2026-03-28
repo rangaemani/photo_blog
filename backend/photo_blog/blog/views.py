@@ -1,20 +1,29 @@
+import io
+import logging
+import zipfile
+
 from django.conf import settings
 from django.db import IntegrityError, models
 from django.db.models import Count
+from django.http import HttpResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import generics, status, viewsets
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
+
+logger = logging.getLogger(__name__)
 from .models import Photo, Category, Report
-from .pipeline import PipelineError, delete_from_r2, process_upload
+from .pipeline import PipelineError, _get_r2_client, delete_from_r2, process_upload
 from .serializers import (
     AdminReportSerializer,
     CategoryCreateSerializer,
     CategorySerializer,
     PhotoDetailSerializer,
+    PhotoDownloadSerializer,
     PhotoGeotagPatchSerializer,
     PhotoListSerializer,
     PhotoCategoryPatchSerializer,
@@ -291,6 +300,72 @@ class AdminReportActionView(APIView):
             report.photo.save(update_fields=['is_trashed', 'trashed_at'])
 
         return Response({'ok': True})
+
+
+class DownloadRateThrottle(UserRateThrottle):
+    scope = 'photo_download'
+
+
+class PhotoDownloadView(APIView):
+    """Download one or more photos as a ZIP (or a single file).
+
+    POST /api/v1/photos/download/
+    Body: { "ids": ["<uuid>", ...] }  — max 50 IDs.
+    Requires authentication (OTP or admin session).
+    """
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [DownloadRateThrottle]
+
+    def post(self, request):
+        serializer = PhotoDownloadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ids = serializer.validated_data['ids']
+
+        photos = list(
+            Photo.objects.filter(id__in=ids, is_trashed=False)
+            .values('id', 'slug', 'original_key')
+        )
+        if not photos:
+            return Response({'error': 'No photos found'}, status=status.HTTP_404_NOT_FOUND)
+
+        client = _get_r2_client()
+
+        if len(photos) == 1:
+            photo = photos[0]
+            key = photo['original_key']
+            ext = key.rsplit('.', 1)[-1] if '.' in key else 'jpg'
+            try:
+                obj = client.get_object(Bucket=settings.R2_BUCKET_NAME, Key=key)
+                data = obj['Body'].read()
+            except Exception:
+                logger.exception('R2 fetch failed for key %s', key)
+                return Response({'error': 'Failed to fetch photo from storage'}, status=status.HTTP_502_BAD_GATEWAY)
+
+            response = HttpResponse(data, content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="{photo["slug"]}.{ext}"'
+            return response
+
+        # Multiple photos — build ZIP, failing hard on any R2 error
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, mode='w', compression=zipfile.ZIP_STORED) as zf:
+            for photo in photos:
+                key = photo['original_key']
+                ext = key.rsplit('.', 1)[-1] if '.' in key else 'jpg'
+                filename = f'{photo["slug"]}.{ext}'
+                try:
+                    obj = client.get_object(Bucket=settings.R2_BUCKET_NAME, Key=key)
+                    zf.writestr(filename, obj['Body'].read())
+                except Exception:
+                    logger.exception('R2 fetch failed for key %s', key)
+                    return Response(
+                        {'error': f'Failed to fetch photo "{photo["slug"]}" from storage'},
+                        status=status.HTTP_502_BAD_GATEWAY,
+                    )
+
+        buf.seek(0)
+        response = HttpResponse(buf.read(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="photos.zip"'
+        return response
 
 
 class CategoryDeleteView(APIView):

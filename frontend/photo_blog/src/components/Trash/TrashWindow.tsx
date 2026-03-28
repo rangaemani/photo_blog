@@ -6,6 +6,7 @@ import { useSelection } from '../../hooks/useSelection';
 import { drawBlurhash } from '../../utils/blurhash';
 import { useSoundContext } from '../../contexts/SoundContext';
 import ConfirmDialog from './ConfirmDialog';
+import Throbber from '../Throbber';
 
 interface Props {
   onChanged: () => void;
@@ -14,6 +15,7 @@ interface Props {
 export default function TrashWindow({ onChanged }: Props) {
   const [photos, setPhotos] = useState<TrashedPhotoListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [busyOp, setBusyOp] = useState<'restoring' | 'purging' | 'emptying' | null>(null);
   const [confirm, setConfirm] = useState<{ type: 'purge' | 'empty' } | null>(null);
   const selection = useSelection();
   const sound = useSoundContext();
@@ -34,15 +36,18 @@ export default function TrashWindow({ onChanged }: Props) {
 
   const handleRestore = useCallback(async () => {
     if (selection.selectedCount === 0) return;
+    setBusyOp('restoring');
     try {
       await restorePhotos(selection.selectedIds);
       selection.clear();
       loadTrash();
       onChanged();
     } catch { /* TODO: show error toast */ }
+    finally { setBusyOp(null); }
   }, [selection, loadTrash, onChanged]);
 
   const handlePurge = useCallback(async () => {
+    setBusyOp('purging');
     try {
       await purgePhotos(selection.selectedIds);
       sound.play('dropTrash');
@@ -51,9 +56,11 @@ export default function TrashWindow({ onChanged }: Props) {
       loadTrash();
       onChanged();
     } catch { /* TODO: show error toast */ }
+    finally { setBusyOp(null); }
   }, [selection, loadTrash, onChanged, sound]);
 
   const handleEmpty = useCallback(async () => {
+    setBusyOp('emptying');
     try {
       await emptyTrash();
       sound.play('emptyTrash');
@@ -62,6 +69,7 @@ export default function TrashWindow({ onChanged }: Props) {
       loadTrash();
       onChanged();
     } catch { /* TODO: show error toast */ }
+    finally { setBusyOp(null); }
   }, [selection, loadTrash, onChanged, sound]);
 
   if (isLoading) {
@@ -80,19 +88,24 @@ export default function TrashWindow({ onChanged }: Props) {
   return (
     <div style={styles.container}>
       <div style={styles.toolbar}>
-        <button style={styles.btn} onClick={() => selection.selectedCount > 0 ? selection.clear() : selection.selectAll(photos.map(p => p.id))}>
+        <button style={styles.btn} disabled={!!busyOp} onClick={() => selection.selectedCount > 0 ? selection.clear() : selection.selectAll(photos.map(p => p.id))}>
           {selection.selectedCount > 0 ? 'Deselect' : 'Select All'}
         </button>
-        <button style={{ ...styles.btn, opacity: selection.selectedCount > 0 ? 1 : 0.4 }} onClick={handleRestore} disabled={selection.selectedCount === 0}>
+        <button style={{ ...styles.btn, opacity: selection.selectedCount > 0 && !busyOp ? 1 : 0.4 }} onClick={handleRestore} disabled={selection.selectedCount === 0 || !!busyOp}>
           Restore
         </button>
-        <button style={{ ...styles.btn, opacity: selection.selectedCount > 0 ? 1 : 0.4 }} onClick={() => setConfirm({ type: 'purge' })} disabled={selection.selectedCount === 0}>
+        <button style={{ ...styles.btn, opacity: selection.selectedCount > 0 && !busyOp ? 1 : 0.4 }} onClick={() => setConfirm({ type: 'purge' })} disabled={selection.selectedCount === 0 || !!busyOp}>
           Delete Forever
         </button>
-        <button style={styles.dangerBtn} onClick={() => setConfirm({ type: 'empty' })}>
+        <button style={{ ...styles.dangerBtn, opacity: busyOp ? 0.4 : 1 }} disabled={!!busyOp} onClick={() => setConfirm({ type: 'empty' })}>
           Empty Trash
         </button>
-        {selection.selectedCount > 0 && (
+        {busyOp ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-muted)', marginLeft: 4 }}>
+            <Throbber />
+            {busyOp === 'restoring' ? 'Restoring...' : busyOp === 'purging' ? 'Deleting...' : 'Emptying...'}
+          </span>
+        ) : selection.selectedCount > 0 && (
           <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 4 }}>
             {selection.selectedCount} selected
           </span>

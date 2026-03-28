@@ -126,6 +126,14 @@ class TrashActionSerializer(serializers.Serializer):
     )
 
 
+class PhotoDownloadSerializer(serializers.Serializer):
+    ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        min_length=1,
+        max_length=50,
+    )
+
+
 class CommentSerializer(serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
 

@@ -65,10 +65,16 @@ export interface PhotoDetail extends PhotoListItem {
   reaction_summary: Record<string, number>;
   user_reactions: string[];
   comment_count: number;
-  lat: number | null;
-  lng: number | null;
   tags: TagItem[];
   pop_tags: PopTagItem[];
+}
+
+/** Result of a photo download request. */
+export interface DownloadResult {
+  /** The file blob — image/jpeg for single, application/zip for multiple. */
+  blob: Blob;
+  /** Suggested save filename from Content-Disposition (e.g. "slug.jpg" or "photos_2026-03-28.zip"). */
+  filename: string;
 }
 
 export interface CommentItem {

@@ -55,3 +55,6 @@ export function useSelection() {
 
   return { selectedIds, selectedCount: selected.size, toggle, rangeSelect, selectAll, clear, isSelected } as const;
 }
+
+/** The shape returned by `useSelection`. Use this to type props that receive the selection object. */
+export type SelectionState = ReturnType<typeof useSelection>;

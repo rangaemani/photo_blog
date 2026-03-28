@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { ActiveDrag, Category, DesktopIconState, ContextMenuState, WindowState, PhotoRef, PhotoListItem } from './types';
-import { getCategories, createCategory, deleteCategory, trashPhotos, patchPhotoCategory, getSharedLayout } from './api/client';
+import { getCategories, createCategory, deleteCategory, trashPhotos, patchPhotoCategory, getSharedLayout, downloadPhotos } from './api/client';
 import { useWindowManager } from './hooks/useWindowManager';
 import { usePhotos } from './hooks/usePhotos';
 import { useSelection } from './hooks/useSelection';
@@ -29,6 +29,7 @@ import AboutContent from './components/StaticPages/AboutContent';
 import ContactContent from './components/StaticPages/ContactContent';
 import MapContent from './components/StaticPages/MapPlaceholder';
 import ToastContainer, { type ToastMessage } from './components/Toast';
+import Throbber from './components/Throbber';
 import ShareContent from './components/StaticPages/ShareContent';
 
 export default function App() {
@@ -59,6 +60,7 @@ function AppInner() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
   const [selectMode, setSelectMode] = useState(false);
+  const [busyWindows, setBusyWindows] = useState<Record<string, 'downloading' | 'trashing' | 'sorting'>>({});
 
   const wm = useWindowManager();
   const photos = usePhotos();
@@ -127,7 +129,7 @@ function AppInner() {
       if (!isAuthenticated && localPhotos.length > 0) {
         const extras: PhotoListItem[] = localPhotos
           .filter(lp => !grid.photos.some(p => p.id === lp.id))
-          .map(lp => ({ ...lp, taken_at: null, category_slug: categorySlug ?? '' }));
+          .map(lp => ({ ...lp, taken_at: null, category_slug: categorySlug ?? '', lat: null, lng: null, is_reported: false }));
         const merged = [...grid.photos, ...extras];
         wm.updateWindow(id, {
           title: `${title} — ${merged.length} photos`,
@@ -211,7 +213,7 @@ function AppInner() {
       // Guest folders: populate from persisted folder contents
       if (icon.id.startsWith('guest-folder-')) {
         const refs = desktop.getFolderContents(icon.id);
-        const folderPhotos: PhotoListItem[] = refs.map(r => ({ ...r, taken_at: null, category_slug: '' }));
+        const folderPhotos: PhotoListItem[] = refs.map(r => ({ ...r, taken_at: null, category_slug: '', lat: null, lng: null, is_reported: false }));
         sound.play('windowOpen');
         wm.openWindow(
           folderPhotos.length > 0 ? `${icon.label} — ${folderPhotos.length} photos` : icon.label,
@@ -271,6 +273,7 @@ function AppInner() {
       });
       return;
     }
+    setBusyWindows(prev => ({ ...prev, [win.id]: 'sorting' }));
     try {
       const grid = await photos.fetchGrid(slug, order, isAuthenticated);
       const cat = categories.find(c => c.slug === slug);
@@ -279,6 +282,9 @@ function AppInner() {
         gridPayload: grid,
       });
     } catch { /* leave as-is */ }
+    finally {
+      setBusyWindows(prev => { const n = { ...prev }; delete n[win.id]; return n; });
+    }
   }, [wm, photos, categories]);
 
   // === Refresh all open windows after a mutation ===
@@ -314,15 +320,37 @@ function AppInner() {
     if (selection.selectedCount === 0 || !win.gridPayload) return;
 
     const idsToTrash = new Set(selection.selectedIds);
-
+    setBusyWindows(prev => ({ ...prev, [win.id]: 'trashing' }));
     try {
       await trashPhotos([...idsToTrash]);
       selection.clear();
       await refreshOpenWindows();
     } catch {
-      // TODO: show error
+      showToast('Failed to trash photos', 'error');
+    } finally {
+      setBusyWindows(prev => { const n = { ...prev }; delete n[win.id]; return n; });
     }
-  }, [selection, refreshOpenWindows]);
+  }, [selection, refreshOpenWindows, showToast]);
+
+  const handleDownloadSelected = useCallback(async (win: WindowState) => {
+    if (selection.selectedCount === 0) return;
+    setBusyWindows(prev => ({ ...prev, [win.id]: 'downloading' }));
+    try {
+      const { blob, filename } = await downloadPhotos([...selection.selectedIds]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Download failed', 'error');
+    } finally {
+      setBusyWindows(prev => { const n = { ...prev }; delete n[win.id]; return n; });
+    }
+  }, [selection, showToast]);
 
   // === Drag-drop handlers ===
 
@@ -385,7 +413,7 @@ function AppInner() {
         if (win.windowType === 'grid' && win.gridPayload?.categorySlug === categorySlug) {
           const existing = win.gridPayload.photos;
           if (!existing.some(p => p.id === drag.photoId) && ref) {
-            const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: categorySlug };
+            const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: categorySlug, lat: null, lng: null, is_reported: false };
             const merged = [...existing, asListItem];
             const baseName = win.title.split(' — ')[0];
             wm.updateWindow(win.id, {
@@ -419,7 +447,7 @@ function AppInner() {
       if (win.windowType === 'grid' && win.gridPayload?.categorySlug === folderId) {
         const existing = win.gridPayload.photos;
         if (!existing.some(p => p.id === drag.photoId) && ref) {
-          const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: '' };
+          const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: '', lat: null, lng: null, is_reported: false };
           const merged = [...existing, asListItem];
           const baseName = win.title.split(' — ')[0];
           wm.updateWindow(win.id, {
@@ -591,7 +619,11 @@ function AppInner() {
   function renderWindowContent(win: WindowState) {
     switch (win.windowType) {
       case 'grid':
-        if (!win.gridPayload) return <div style={{ padding: 16, color: 'var(--text-muted)' }}>Loading...</div>;
+        if (!win.gridPayload) return (
+          <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
+            <Throbber />Loading...
+          </div>
+        );
         return (
           <PhotoGrid
             grid={win.gridPayload}
@@ -653,7 +685,8 @@ function AppInner() {
           showViewToggle
           gridColumns={gridColumns}
           onToggleGrid={toggleGridSize}
-          isAdmin={isAuthenticated}
+          isAdmin={auth.user?.is_staff === true}
+          isAuthenticated={isAuthenticated}
           selectMode={selectMode}
           onToggleSelectMode={() => {
             setSelectMode(prev => {
@@ -668,6 +701,8 @@ function AppInner() {
           }}
           onDeselectAll={selection.clear}
           onTrashSelected={() => handleTrashSelected(win)}
+          onDownloadSelected={() => handleDownloadSelected(win)}
+          busyOp={busyWindows[win.id]}
         />
       );
     }

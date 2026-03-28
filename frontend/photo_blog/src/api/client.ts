@@ -1,4 +1,4 @@
-import type { PaginatedResponse, PhotoListItem, PhotoDetail, Category, TrashedPhotoListItem, User, OTPRequestResponse, OTPVerifyResponse, CommentItem, ToggleReactionResponse, TagItem, PopTagItem } from '../types';
+import type { PaginatedResponse, PhotoListItem, PhotoDetail, Category, TrashedPhotoListItem, User, OTPRequestResponse, OTPVerifyResponse, CommentItem, ToggleReactionResponse, TagItem, PopTagItem, DesktopBlob, DownloadResult } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1';
 
@@ -286,6 +286,33 @@ export function emptyTrash(): Promise<{ purged: number }> {
   return postJSON(`${API_BASE}/photos/trash/empty/`, {});
 }
 
+/** Download one or more photos as a file attachment.
+ * Single photo → raw image file. Multiple photos → ZIP archive.
+ * Requires authentication. Maximum 50 photos per request.
+ * @param ids - Array of photo IDs (UUIDs) to download.
+ * @returns The file blob and a suggested save filename from Content-Disposition.
+ */
+export async function downloadPhotos(ids: string[]): Promise<DownloadResult> {
+  const res = await fetch(`${API_BASE}/photos/download/`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCsrfToken(),
+    },
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: string };
+    throw new Error(body.error ?? `Download failed: ${res.status}`);
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const match = disposition.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? (ids.length === 1 ? 'photo.jpg' : 'photos.zip');
+  return { blob, filename };
+}
+
 // === Reactions & Comments ===
 
 export function toggleReaction(slug: string, emoji: string): Promise<ToggleReactionResponse> {
@@ -359,10 +386,10 @@ export function actionReport(id: string, action: 'dismiss' | 'delete'): Promise<
 
 // === Shared Layouts ===
 
-export function shareLayout(blob: unknown): Promise<{ slug: string }> {
+export function shareLayout(blob: DesktopBlob): Promise<{ slug: string }> {
   return postJSON(`${API_BASE}/layouts/`, blob);
 }
 
-export function getSharedLayout(slug: string): Promise<unknown> {
+export function getSharedLayout(slug: string): Promise<DesktopBlob> {
   return fetchJSON(`${API_BASE}/layouts/${slug}/`);
 }
