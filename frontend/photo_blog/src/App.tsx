@@ -67,7 +67,7 @@ function AppInner() {
   const selection = useSelection();
   const auth = useAuthContext();
   const { isAuthenticated } = auth;
-  const desktop = useDesktopState(categories, isAuthenticated);
+  const desktop = useDesktopState(categories);
   const widgets = useWidgetState();
   const sound = useSoundContext();
 

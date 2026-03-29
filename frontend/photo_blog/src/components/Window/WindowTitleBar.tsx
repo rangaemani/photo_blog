@@ -7,7 +7,7 @@ interface Props {
   onClose: () => void;
   onMinimize: () => void;
   onMaximize: () => void;
-  onMouseDown: (e: React.MouseEvent) => void;
+  onPointerDown: (e: React.PointerEvent) => void;
 }
 
 const TYPE_ICONS: Record<WindowContentType, string> = {
@@ -20,9 +20,9 @@ const TYPE_ICONS: Record<WindowContentType, string> = {
   reports: icons.sm.reports,
 };
 
-export default function WindowTitleBar({ title, windowType, onClose, onMinimize, onMaximize, onMouseDown }: Props) {
+export default function WindowTitleBar({ title, windowType, onClose, onMinimize, onMaximize, onPointerDown }: Props) {
   return (
-    <div style={styles.bar} onMouseDown={onMouseDown} onDoubleClick={onMaximize}>
+    <div className="drag-handle" style={styles.bar} onPointerDown={onPointerDown} onDoubleClick={onMaximize}>
       <div style={styles.left}>
         <img src={TYPE_ICONS[windowType]} alt="" style={styles.icon} draggable={false} />
       </div>

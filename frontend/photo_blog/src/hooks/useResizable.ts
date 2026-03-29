@@ -14,9 +14,10 @@ const CURSOR_MAP: Record<string, string> = {
   se: 'nwse-resize', nw: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize',
 };
 
-/** Provides edge-based mouse resize for window-like elements.
+/** Provides edge-based pointer resize for window-like elements.
+ * Uses PointerEvent so the same code works for both mouse and touch input.
  * @param opts - `{ onResize, onResizeStart, minWidth, minHeight }` — onResize receives absolute (width, height, x, y).
- * @returns `{ onEdgeMouseDown }` handler to call with the mouse event, edge, current dimensions, and current position.
+ * @returns `{ onEdgePointerDown }` handler to call with the pointer event, edge, current dimensions, and position.
  */
 export function useResizable({
   onResize, onResizeStart, onResizeEnd, minWidth = 400, minHeight = 300,
@@ -36,17 +37,20 @@ export function useResizable({
     return () => cleanupRef.current?.();
   }, []);
 
-  const onEdgeMouseDown = useCallback((
-    e: React.MouseEvent,
+  const onEdgePointerDown = useCallback((
+    e: React.PointerEvent,
     edge: ResizeEdge,
     currentW: number,
     currentH: number,
     currentX: number,
     currentY: number,
   ) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     onResizeStart?.();
+
+    const { pointerId } = e;
     ref.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -59,8 +63,8 @@ export function useResizable({
 
     document.body.style.cursor = CURSOR_MAP[edge] ?? '';
 
-    const onMouseMove = (ev: MouseEvent) => {
-      if (!ref.current) return;
+    const onPointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId || !ref.current) return;
       const dx = ev.clientX - ref.current.startX;
       const dy = ev.clientY - ref.current.startY;
       let w = ref.current.origW;
@@ -87,17 +91,20 @@ export function useResizable({
       ref.current = null;
       cleanupRef.current = null;
       document.body.style.cursor = '';
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
       onResizeEnd?.();
     };
 
-    const onMouseUp = () => cleanup();
+    const onPointerUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      cleanup();
+    };
 
     cleanupRef.current = cleanup;
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
   }, [onResize, onResizeStart, onResizeEnd, minWidth, minHeight]);
 
-  return { onEdgeMouseDown };
+  return { onEdgePointerDown };
 }

@@ -14,11 +14,11 @@ interface Props {
 }
 
 export default function WidgetShell({ title, width, height, x, y, onMove, onClose, children }: Props) {
-  const { onMouseDown } = useDraggable({ onDrag: onMove });
+  const { onPointerDown } = useDraggable({ onDrag: onMove });
 
-  const handleTitleMouseDown = useCallback((e: React.MouseEvent) => {
-    onMouseDown(e, x, y);
-  }, [onMouseDown, x, y]);
+  const handleTitlePointerDown = useCallback((e: React.PointerEvent) => {
+    onPointerDown(e, x, y);
+  }, [onPointerDown, x, y]);
 
   return (
     <motion.div
@@ -43,7 +43,8 @@ export default function WidgetShell({ title, width, height, x, y, onMove, onClos
     >
       {/* Title bar */}
       <div
-        onMouseDown={handleTitleMouseDown}
+        className="drag-handle"
+        onPointerDown={handleTitlePointerDown}
         style={{
           height: 20,
           background: 'linear-gradient(180deg, var(--pale-slate) 0%, var(--pale-slate-2) 100%)',

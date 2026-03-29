@@ -56,7 +56,6 @@ export const icons = {
     detail: imageJpegLg,
     static: paintFileLg,
     upload: floppyLg,
-    recycleEmpty: recycleEmptyLg,
     folder: dirClosedLg,
     contact: envelopeLg,
     map: globeLg,

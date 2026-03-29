@@ -6,6 +6,7 @@ import { useDragSource } from '../../hooks/useDragSource';
 import { useDropZone } from '../../hooks/useDropZone';
 import { useSoundContext } from '../../contexts/SoundContext';
 import { icons } from '../../lib/win98Icons';
+import { isMobile } from '../../utils/position';
 
 interface Props {
   icon: DesktopIconState;
@@ -70,6 +71,8 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
   const inputRef = useRef<HTMLInputElement>(null);
   const [editValue, setEditValue] = useState(icon.label);
   const sound = useSoundContext();
+  // Evaluated once at mount — layout doesn't change mid-session
+  const mobile = isMobile();
 
   // Auto-focus + select all when entering rename mode
   useEffect(() => {
@@ -95,7 +98,7 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
   const handleDrag = useCallback((x: number, y: number) => {
     onMove(icon.id, x, y);
   }, [icon.id, onMove]);
-  const { onMouseDown: startPositionalDrag } = useDraggable({
+  const { onPointerDown: startPositionalDrag } = useDraggable({
     onDrag: handleDrag,
     onDragStart: useCallback(() => setIsDragging(true), []),
     onDragEnd: useCallback(() => setIsDragging(false), []),
@@ -135,17 +138,22 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
     return () => el.removeEventListener('pointerdown', handler);
   }, [icon.id, isPhotoIcon, isRenaming, onSelect, startPhotoDrag]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (isRenaming || isPhotoIcon) return;
     sound.play('click');
     onSelect(icon.id);
-    startPositionalDrag(e, icon.position.x, icon.position.y);
-  }, [icon.id, icon.position.x, icon.position.y, isPhotoIcon, isRenaming, onSelect, startPositionalDrag, sound]);
+    if (!mobile) startPositionalDrag(e, icon.position.x, icon.position.y);
+  }, [icon.id, icon.position.x, icon.position.y, isPhotoIcon, isRenaming, mobile, onSelect, startPositionalDrag, sound]);
+
+  const handleClick = useCallback(() => {
+    if (!mobile || isRenaming) return;
+    onOpen(icon);
+  }, [icon, isRenaming, mobile, onOpen]);
 
   const handleDoubleClick = useCallback(() => {
-    if (isRenaming) return;
+    if (mobile || isRenaming) return;
     onOpen(icon);
-  }, [icon, isRenaming, onOpen]);
+  }, [icon, isRenaming, mobile, onOpen]);
 
   // Slow double-click on label to rename (select first click, rename second click with delay)
   const handleLabelClick = useCallback((e: React.MouseEvent) => {
@@ -218,8 +226,10 @@ export default function DesktopIcon({ icon, isSelected, isRenaming, isAdmin, onS
         alignItems: 'center',
         cursor: 'pointer',
         zIndex: 10,
+        touchAction: 'none',
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
       onMouseEnter={() => onHover(hoverText)}

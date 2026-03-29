@@ -6,9 +6,10 @@ interface UseDraggableOpts {
   onDragEnd?: () => void;
 }
 
-/** Provides mouse-based dragging for absolutely-positioned elements (e.g. windows, icons).
- * @param opts - `{ onDrag, onDragStart }` — onDrag receives the new (x, y) position on each move; onDragStart fires once at drag begin.
- * @returns `{ onMouseDown }` handler to call with the mouse event and current element position.
+/** Provides pointer-based dragging for absolutely-positioned elements (e.g. windows, icons).
+ * Uses PointerEvent so the same code works for both mouse and touch input.
+ * @param opts - `{ onDrag, onDragStart, onDragEnd }` — onDrag receives the new (x, y) position on each move.
+ * @returns `{ onPointerDown }` handler to attach to the drag handle element.
  */
 export function useDraggable({ onDrag, onDragStart, onDragEnd }: UseDraggableOpts) {
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
@@ -19,15 +20,18 @@ export function useDraggable({ onDrag, onDragStart, onDragEnd }: UseDraggableOpt
     return () => cleanupRef.current?.();
   }, []);
 
-  const onMouseDown = useCallback((e: React.MouseEvent, currentX: number, currentY: number) => {
+  const onPointerDown = useCallback((e: React.PointerEvent, currentX: number, currentY: number) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     onDragStart?.();
+
+    const { pointerId } = e;
     dragRef.current = { startX: e.clientX, startY: e.clientY, origX: currentX, origY: currentY };
 
     document.body.style.cursor = 'grabbing';
 
-    const onMouseMove = (ev: MouseEvent) => {
-      if (!dragRef.current) return;
+    const onPointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId || !dragRef.current) return;
       const dx = ev.clientX - dragRef.current.startX;
       const dy = ev.clientY - dragRef.current.startY;
       onDrag(dragRef.current.origX + dx, dragRef.current.origY + dy);
@@ -37,17 +41,20 @@ export function useDraggable({ onDrag, onDragStart, onDragEnd }: UseDraggableOpt
       dragRef.current = null;
       cleanupRef.current = null;
       document.body.style.cursor = '';
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
       onDragEnd?.();
     };
 
-    const onMouseUp = () => cleanup();
+    const onPointerUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      cleanup();
+    };
 
     cleanupRef.current = cleanup;
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
   }, [onDrag, onDragStart, onDragEnd]);
 
-  return { onMouseDown };
+  return { onPointerDown };
 }

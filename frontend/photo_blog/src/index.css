@@ -109,6 +109,11 @@ html, body, #root {
   pointer-events: none;
 }
 
+/* Allow natural scroll inside window bodies on touch devices */
+.window-body {
+  touch-action: pan-y pan-x;
+}
+
 /* Scrollbar styling for window bodies */
 .window-body::-webkit-scrollbar {
   width: 14px;
@@ -129,10 +134,19 @@ html, body, #root {
   background: var(--pale-slate-2);
 }
 
+/* Touch-action utilities for pointer event handling */
+.drag-handle {
+  touch-action: none;
+}
+.resize-edge {
+  touch-action: none;
+}
+
 /* Window title-bar buttons */
 .win-btn {
   width: 18px;
   height: 18px;
+  touch-action: manipulation;
   border-top: 2px solid var(--bevel-highlight);
   border-left: 2px solid var(--bevel-highlight);
   border-bottom: 2px solid var(--bevel-shadow);
@@ -166,6 +180,7 @@ html, body, #root {
 
 /* Context menu items */
 .context-menu-item {
+  touch-action: manipulation;
   padding: 4px 16px;
   font-size: 13px;
   height: 24px;

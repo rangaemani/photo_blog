@@ -55,7 +55,7 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
     setIsInteracting(false);
   }, []);
 
-  const { onMouseDown: onTitleDrag } = useDraggable({
+  const { onPointerDown: onTitleDrag } = useDraggable({
     onDrag: onMove,
     onDragStart: startInteract,
     onDragEnd: endInteract,
@@ -63,7 +63,7 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
 
   const minSize = MIN_SIZES[win.windowType] ?? { width: 320, height: 280 };
 
-  const { onEdgeMouseDown } = useResizable({
+  const { onEdgePointerDown } = useResizable({
     onResize,
     onResizeStart: startInteract,
     onResizeEnd: endInteract,
@@ -74,13 +74,13 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
   // Register window body as a drop zone when dropZoneId is provided
   const { ref: dropRef, isOver } = useDropZone(dropZoneId ?? `__noop-win-${win.id}`);
 
-  const handleTitleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleTitlePointerDown = useCallback((e: React.PointerEvent) => {
     onTitleDrag(e, win.position.x, win.position.y);
   }, [onTitleDrag, win.position.x, win.position.y]);
 
-  const handleEdge = useCallback((e: React.MouseEvent, edge: ResizeEdge) => {
-    onEdgeMouseDown(e, edge, win.size.width, win.size.height, win.position.x, win.position.y);
-  }, [onEdgeMouseDown, win.size.width, win.size.height, win.position.x, win.position.y]);
+  const handleEdge = useCallback((e: React.PointerEvent, edge: ResizeEdge) => {
+    onEdgePointerDown(e, edge, win.size.width, win.size.height, win.position.x, win.position.y);
+  }, [onEdgePointerDown, win.size.width, win.size.height, win.position.x, win.position.y]);
 
   // Focus shadow: deeper when this is the front-most visible window
   const shadow = isFocused && !win.isMinimized
@@ -121,7 +121,7 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
         overflow: 'hidden',
         pointerEvents: win.isMinimized ? 'none' : 'auto',
       }}
-      onMouseDown={onFocus}
+      onPointerDown={onFocus}
     >
       <WindowTitleBar
         title={win.title}
@@ -129,7 +129,7 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
         onClose={onClose}
         onMinimize={onMinimize}
         onMaximize={onMaximize}
-        onMouseDown={handleTitleMouseDown}
+        onPointerDown={handleTitlePointerDown}
       />
       {toolbar}
       <div
@@ -148,8 +148,9 @@ export default function Window({ win, isFocused = false, onClose, onMinimize, on
       {!win.isMaximized && RESIZE_EDGES.map(({ edge, style }) => (
         <div
           key={edge}
+          className="resize-edge"
           style={{ position: 'absolute', ...style }}
-          onMouseDown={(e) => handleEdge(e, edge)}
+          onPointerDown={(e) => handleEdge(e, edge)}
         />
       ))}
     </motion.div>
