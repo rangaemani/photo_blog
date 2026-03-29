@@ -48,14 +48,22 @@ export function useWindowManager() {
     payload: WindowPayload,
   ): string => {
     const id = nextId();
-    const position = getStaggeredPosition();
-    const size = { ...DEFAULT_SIZES[windowType] };
+    const vpWidth = window.innerWidth;
+    const vpHeight = window.innerHeight;
+    const mobile = vpWidth < 600;
+
+    const position = mobile
+      ? { x: 0, y: MENU_BAR_HEIGHT }
+      : getStaggeredPosition();
+    const size = mobile
+      ? { width: vpWidth, height: vpHeight - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT }
+      : { ...DEFAULT_SIZES[windowType] };
 
     setWindows(prev => {
       const nextZ = prev.reduce((max, w) => Math.max(max, w.zIndex), 100) + 1;
       const win: WindowState = {
         id, title, windowType, position, size,
-        isMaximized: false, isMinimized: false, zIndex: nextZ,
+        isMaximized: mobile, isMinimized: false, zIndex: nextZ,
         ...payload,
       };
       return [...prev, win];
