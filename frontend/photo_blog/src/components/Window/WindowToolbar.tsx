@@ -7,7 +7,7 @@ interface Props {
   gridColumns?: number;
   onToggleGrid?: () => void;
   showViewToggle?: boolean;
-  // Selection props — isAuthenticated gates select mode + download; isAdmin gates trash
+  /** `isAuthenticated` gates select mode and download; `isAdmin` additionally gates upload & trash. */
   isAdmin?: boolean;
   isAuthenticated?: boolean;
   selectMode?: boolean;
@@ -18,10 +18,17 @@ interface Props {
   onDeselectAll?: () => void;
   onTrashSelected?: () => void;
   onDownloadSelected?: () => void;
-  /** Which async op is currently in flight for this window, if any */
+  /** Which async op is currently in flight for this window, if any. */
   busyOp?: 'downloading' | 'trashing' | 'sorting';
 }
 
+/**
+ * Toolbar strip rendered below a grid window's title bar.
+ *
+ * Combines navigation (back button), view controls (column count toggle),
+ * and selection mode actions (select all, download, trash). Visibility of
+ * individual controls is gated by props — pass only what the current window needs.
+ */
 export default function WindowToolbar({
   onBack, canGoBack, gridColumns, onToggleGrid, showViewToggle,
   isAdmin, isAuthenticated, selectMode, onToggleSelectMode,

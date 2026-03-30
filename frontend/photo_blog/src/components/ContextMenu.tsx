@@ -7,6 +7,13 @@ interface Props {
   onClose: () => void;
 }
 
+/**
+ * Floating context menu with viewport-aware repositioning and keyboard navigation.
+ *
+ * Repositions itself if it would overflow the viewport edge.
+ * Supports arrow-key navigation, Enter to activate, Escape to dismiss,
+ * and closes on outside click.
+ */
 export default function ContextMenu({ menu, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: menu.x, y: menu.y });

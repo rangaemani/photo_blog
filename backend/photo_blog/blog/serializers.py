@@ -108,6 +108,7 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         fields = ['name']
 
     def create(self, validated_data):
+        # Derive slug from the name, appending an incrementing suffix if it collides.
         from django.utils.text import slugify
         name = validated_data['name']
         slug = slugify(name)

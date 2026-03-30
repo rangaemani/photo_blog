@@ -11,11 +11,19 @@ interface DesktopBlobV2 {
   folders: Record<string, PhotoRef[]>;
 }
 
+const RIGHT_ICON_IDS: ReadonlySet<string> = new Set(['contact', 'map', 'trash']);
+
 /**
  * Derive the ordered preset icon list. Positions are placeholders ({x:0,y:0}) —
  * the layout effect overwrites them based on viewport before first paint.
+ *
+ * Returns icons plus `rightIds` — the set of IDs that belong in the right-anchored
+ * column on desktop (Contact, Map, Trash). Pass this to `computeIconLayout`.
  */
-export function derivePreset(categories: Category[]): DesktopIconState[] {
+export function derivePreset(categories: Category[]): {
+  icons: DesktopIconState[];
+  rightIds: ReadonlySet<string>;
+} {
   const placeholder: Position = { x: 0, y: 0 };
 
   const staticLeft: DesktopIconState[] = [
@@ -37,7 +45,10 @@ export function derivePreset(categories: Category[]): DesktopIconState[] {
     { id: 'trash', label: 'Trash', iconType: 'system', position: placeholder, action: { type: 'openTrash' } },
   ];
 
-  return [...staticLeft, ...categoryIcons, ...staticRight];
+  return {
+    icons: [...staticLeft, ...categoryIcons, ...staticRight],
+    rightIds: RIGHT_ICON_IDS,
+  };
 }
 
 function loadBlob(): { userIcons: DesktopIconState[]; folders: Record<string, PhotoRef[]> } {
@@ -75,6 +86,19 @@ function persistBlob(userIcons: DesktopIconState[], folders: Record<string, Phot
   }
 }
 
+/** Layout helper: apply `computeIconLayout` to an icon array using the current viewport. */
+function applyLayout(
+  icons: DesktopIconState[],
+  rightIds: ReadonlySet<string>,
+): DesktopIconState[] {
+  const positions = computeIconLayout(
+    icons,
+    { width: window.innerWidth, height: window.innerHeight },
+    rightIds,
+  );
+  return icons.map(ic => ({ ...ic, position: positions.get(ic.id) ?? ic.position }));
+}
+
 /**
  * Manages desktop icon state with dynamic viewport-aware layout.
  *
@@ -83,32 +107,28 @@ function persistBlob(userIcons: DesktopIconState[], folders: Record<string, Phot
  * guest folders) are persisted to localStorage.
  *
  * @param categories - Photo categories from the API.
+ * @returns Icon array and mutation methods: `moveIcon`, `addFolder`, `addPhotoIcon`,
+ *   `renameIcon`, `replaceIcon`, `removeIcon`, `addToFolder`, `getFolderContents`,
+ *   `exportBlob`, `importBlob`, `reset`.
  */
 export function useDesktopState(categories: Category[]) {
   const [icons, setIcons] = useState<DesktopIconState[]>([]);
   const initialized = useRef(false);
   const folderContentsRef = useRef<Map<string, PhotoRef[]>>(new Map());
+  // Stable ref so resize handler and callbacks always see current rightIds
+  const rightIdsRef = useRef<ReadonlySet<string>>(RIGHT_ICON_IDS);
 
   // Hydrate once when categories load
   useEffect(() => {
     if (categories.length === 0) return;
-    const preset = derivePreset(categories);
+    const { icons: presetIcons, rightIds } = derivePreset(categories);
+    rightIdsRef.current = rightIds;
+
     const { userIcons, folders } = loadBlob();
+    const merged = [...presetIcons, ...userIcons];
 
-    // Merge: preset first (in order), then user-created icons
-    const merged = [...preset, ...userIcons];
+    setIcons(applyLayout(merged, rightIds));
 
-    // Apply initial layout positions
-    const positions = computeIconLayout(merged, {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-    const positioned = merged.map(ic => ({
-      ...ic,
-      position: positions.get(ic.id) ?? ic.position,
-    }));
-
-    setIcons(positioned);
     const map = new Map<string, PhotoRef[]>();
     for (const [k, v] of Object.entries(folders)) map.set(k, v);
     folderContentsRef.current = map;
@@ -124,21 +144,7 @@ export function useDesktopState(categories: Category[]) {
     const handleResize = () => {
       clearTimeout(debounce);
       debounce = setTimeout(() => {
-        setIcons(prev => {
-          const positions = computeIconLayout(prev, {
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-          // On mobile: reposition all icons. On desktop: only reposition icons
-          // that are still at their auto-layout position (haven't been manually moved).
-          // Since we can't distinguish "manually moved" from "layout-placed" without
-          // extra tracking, reflow all on resize — matches standard desktop behavior
-          // (icons reflow when window is resized enough to push them offscreen).
-          return prev.map(ic => ({
-            ...ic,
-            position: positions.get(ic.id) ?? ic.position,
-          }));
-        });
+        setIcons(prev => applyLayout(prev, rightIdsRef.current));
       }, 200);
     };
 
@@ -184,16 +190,10 @@ export function useDesktopState(categories: Category[]) {
         id,
         label,
         iconType: 'folder',
-        position,  // will be overwritten by next layout recompute; use drop position as hint
+        position,
         action: { type: 'openGrid' },
       };
-      // Immediately recompute layout to place the new icon
-      const next = [...prev, newIcon];
-      const positions = computeIconLayout(next, {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-      return next.map(ic => ({ ...ic, position: positions.get(ic.id) ?? ic.position }));
+      return applyLayout([...prev, newIcon], rightIdsRef.current);
     });
     return id;
   }, []);
@@ -217,12 +217,7 @@ export function useDesktopState(categories: Category[]) {
         action: { type: 'openDetail', photoSlug },
         thumbnailUrl,
       };
-      const next = [...prev, newIcon];
-      const positions = computeIconLayout(next, {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-      return next.map(ic => ({ ...ic, position: positions.get(ic.id) ?? ic.position }));
+      return applyLayout([...prev, newIcon], rightIdsRef.current);
     });
   }, []);
 
@@ -257,11 +252,8 @@ export function useDesktopState(categories: Category[]) {
       const blob = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
       if (blob.version !== 2 || !Array.isArray(blob.userIcons)) return false;
       setIcons(prev => {
-        // Replace user icons, keep preset icons in place
         const preset = prev.filter(ic => ic.iconType !== 'photo' && !ic.id.startsWith('guest-folder-'));
-        const next = [...preset, ...blob.userIcons];
-        const positions = computeIconLayout(next, { width: window.innerWidth, height: window.innerHeight });
-        return next.map(ic => ({ ...ic, position: positions.get(ic.id) ?? ic.position }));
+        return applyLayout([...preset, ...blob.userIcons], rightIdsRef.current);
       });
       const map = new Map<string, PhotoRef[]>();
       for (const [k, v] of Object.entries(blob.folders ?? {})) map.set(k, v as PhotoRef[]);
@@ -275,13 +267,13 @@ export function useDesktopState(categories: Category[]) {
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     folderContentsRef.current = new Map();
-    const preset = derivePreset(categories);
-    const positions = computeIconLayout(preset, { width: window.innerWidth, height: window.innerHeight });
-    setIcons(preset.map(ic => ({ ...ic, position: positions.get(ic.id) ?? ic.position })));
+    const { icons: presetIcons, rightIds } = derivePreset(categories);
+    rightIdsRef.current = rightIds;
+    setIcons(applyLayout(presetIcons, rightIds));
   }, [categories]);
 
-  // suppressNextMerge is no longer needed (no merge on role switch), but keep
-  // the export to avoid breaking any callers that still reference it.
+  // suppressNextMerge is no longer needed (no merge on role switch), kept as no-op
+  // to avoid breaking callers.
   const suppressNextMerge = useCallback(() => {}, []);
 
   return {

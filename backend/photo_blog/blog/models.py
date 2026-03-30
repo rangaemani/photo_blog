@@ -3,8 +3,13 @@ import uuid
 
 from django.db import models
 
-# Create your models here.
+
 class Category(models.Model):
+    """A top-level album/collection that photos are filed under.
+
+    'Uncategorized' is a sentinel category; it must not be deleted.
+    The ``sort_order`` field controls display order in the UI.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
@@ -13,8 +18,18 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class Photo(models.Model):
+    """A single uploaded photo and all its associated metadata.
+
+    Original and thumbnail files are stored in Cloudflare R2; only the
+    storage keys are kept in the database. Use ``settings.R2_BASE_URL``
+    to construct public URLs.
+
+    Deletion is soft (``is_trashed``/``trashed_at``). Hard-delete via
+    ``TrashPurgeView`` or ``TrashEmptyView``, which also remove R2 objects.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='photos')
     title = models.CharField(max_length=255)
@@ -173,7 +188,7 @@ class Report(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     photo = models.ForeignKey('Photo', on_delete=models.CASCADE, related_name='reports')
-    # JSON list of {type, id?} — type in [image, tag, pop_tag, comment]
+    # JSON list of {type, id?}; type in [image, tag, pop_tag, comment]
     targets = models.JSONField()
     reason = models.TextField(max_length=500, blank=True, default='')
     reporter_ip = models.GenericIPAddressField(null=True, blank=True)
@@ -210,7 +225,7 @@ class SharedLayout(models.Model):
 
     @staticmethod
     def slug_from_data(data: dict) -> str:
-        """Deterministic slug from content hash — same layout = same URL."""
+        """Deterministic slug from content hash: same content produces the same URL."""
         raw = hashlib.sha256(
             # Sort keys for deterministic hashing
             __import__('json').dumps(data, sort_keys=True).encode()

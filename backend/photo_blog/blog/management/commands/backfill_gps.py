@@ -5,7 +5,7 @@ Fetches each photo's original from R2, re-parses GPS EXIF tags, and saves
 lat/lng if found. Skips photos that already have coordinates.
 
 Usage:
-    python manage.py backfill_gps            # dry run — shows what would change
+    python manage.py backfill_gps            # dry run - shows what would change
     python manage.py backfill_gps --write    # apply updates
     python manage.py backfill_gps --write --photo <uuid>  # single photo
 """
@@ -72,7 +72,7 @@ class Command(BaseCommand):
         photo_id = options.get('photo')
 
         if not write:
-            self.stdout.write(self.style.WARNING('Dry run — pass --write to apply changes\n'))
+            self.stdout.write(self.style.WARNING('Dry run - pass --write to apply changes\n'))
 
         r2 = boto3.client(
             's3',
@@ -102,13 +102,13 @@ class Command(BaseCommand):
                 resp = r2.get_object(Bucket=settings.R2_BUCKET_NAME, Key=photo.original_key)
                 file_bytes = resp['Body'].read()
             except (BotoCoreError, ClientError) as e:
-                self.stderr.write(f'  SKIP  {photo.id} — R2 fetch failed: {e}')
+                self.stderr.write(f'  SKIP  {photo.id} - R2 fetch failed: {e}')
                 failed += 1
                 continue
 
             coords = _parse_gps(file_bytes)
             if coords is None:
-                self.stdout.write(f'  —     {photo.id} ({photo.title}) — no GPS data')
+                self.stdout.write(f'  -     {photo.id} ({photo.title}) - no GPS data')
                 skipped += 1
                 continue
 

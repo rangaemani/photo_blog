@@ -22,7 +22,7 @@ def get_client_ip(request) -> str:
 
 
 class LayoutCreateView(APIView):
-    """POST /api/v1/layouts/ — store a desktop layout blob, return a short slug."""
+    """POST /api/v1/layouts/: store a desktop layout blob and return a short slug."""
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -34,7 +34,7 @@ class LayoutCreateView(APIView):
         if len(raw.encode('utf-8')) > MAX_BLOB_SIZE:
             return Response({'error': 'Layout too large (max 50KB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
-        # Deterministic slug — same content = same URL (deduplicates)
+        # Deterministic slug: same content = same URL (deduplicates)
         slug = SharedLayout.slug_from_data(data)
 
         # If this exact layout already exists, just return it
@@ -57,7 +57,7 @@ class LayoutCreateView(APIView):
 
 
 class LayoutRetrieveView(APIView):
-    """GET /api/v1/layouts/<slug>/ — retrieve a shared layout blob."""
+    """GET /api/v1/layouts/<slug>/: retrieve a shared layout blob."""
     permission_classes = [AllowAny]
 
     def get(self, request, slug):

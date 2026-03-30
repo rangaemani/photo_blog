@@ -27,6 +27,11 @@ const SoundContext = createContext<SoundContextValue | null>(null);
 
 const MUTE_KEY = 'sound_muted';
 
+/**
+ * Access the sound system. Must be called within a `SoundProvider`.
+ *
+ * @returns `play(name)` to trigger a sound effect, `muted` state, and `toggleMute`.
+ */
 export function useSoundContext(): SoundContextValue {
   const ctx = useContext(SoundContext);
   if (!ctx) throw new Error('useSoundContext must be used inside SoundProvider');

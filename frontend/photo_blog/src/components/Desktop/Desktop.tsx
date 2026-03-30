@@ -20,6 +20,13 @@ interface Props {
   children: React.ReactNode;
 }
 
+/**
+ * The desktop surface — full-screen backdrop that hosts icons and windows.
+ *
+ * Registers as a drop zone for photo drags. Provides right-click context menu
+ * (New Window, New Folder, Snap to Grid) and delegates icon interactions to
+ * `DesktopIcon`. On folder creation, auto-enters rename mode.
+ */
 export default function Desktop({
   icons, selectedIconId, isAdmin, onSelectIcon, onOpenIcon, onMoveIcon, onRenameIcon, onDeleteIcon, onNewFolder,
   onHover, onHoverEnd, onContextMenu, children,

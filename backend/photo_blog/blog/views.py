@@ -33,11 +33,18 @@ from .serializers import (
     TrashedPhotoSerializer,
 )
 
-# Create your views here.
 class PhotoListView(viewsets.ReadOnlyModelViewSet[Photo]):
+    """Read-only photo listing and detail.
+
+    ``list`` → paginated ``PhotoListSerializer``.
+    ``retrieve`` → full ``PhotoDetailSerializer`` (reactions, comments, tags, etc.).
+
+    Staff see reported photos; guests do not. Sort order is controlled by
+    the ``order`` query param (``asc``/``desc``, default ``desc``).
+    """
     lookup_field = 'slug'
 
-    def get_queryset(self):        
+    def get_queryset(self):
         if self.request.user.is_staff: # pyright: ignore[reportAttributeAccessIssue]
             qs = Photo.objects.select_related('category').filter(is_trashed=False)
         else:
@@ -51,14 +58,21 @@ class PhotoListView(viewsets.ReadOnlyModelViewSet[Photo]):
         else:
             qs = qs.order_by(models.F('taken_at').desc(nulls_last=True), '-id')
         return qs
-    
+
     def get_serializer_class(self): # pyright: ignore[reportIncompatibleMethodOverride]
         if self.action == 'retrieve':
             return PhotoDetailSerializer
-        return PhotoListSerializer    
-    
+        return PhotoListSerializer
+
+
 class CategoryviewSet(viewsets.ReadOnlyModelViewSet[Category]):
+    """Read-only category list with live photo counts.
+
+    ``photo_count`` is annotated - excludes trashed photos.
+    Pagination is disabled; the full list is returned in one response.
+    """
     pagination_class = None
+
     def get_queryset(self):
         return Category.objects.annotate(
             photo_count=Count('photos', filter=models.Q(photos__is_trashed=False))
@@ -71,6 +85,12 @@ class CategoryviewSet(viewsets.ReadOnlyModelViewSet[Category]):
 
 
 class PhotoUploadView(APIView):
+    """Upload a new photo (admin only).
+
+    Runs the full pipeline: image decode → R2 original upload → thumbnail
+    generation → R2 thumbnail upload → EXIF extraction → blurhash.
+    Slug is derived from the title and deduplicated if necessary.
+    """
     permission_classes = [IsAdminUser]
 
     def post(self, request):
@@ -103,7 +123,7 @@ class PhotoUploadView(APIView):
         try:
             photo.save()
         except IntegrityError:
-            # Slug race condition — append short uuid suffix and retry
+            # Slug race condition - append short uuid suffix and retry
             photo.slug = f'{base_slug}-{photo.id.hex[:6]}'
             photo.save()
 
@@ -114,6 +134,7 @@ class PhotoUploadView(APIView):
 
 
 class TrashedPhotoListView(generics.ListAPIView):
+    """Paginated list of soft-deleted photos (admin only)."""
     permission_classes = [IsAdminUser]
     serializer_class = TrashedPhotoSerializer
 
@@ -203,6 +224,8 @@ class PhotoGeotagPatchView(generics.UpdateAPIView):
     http_method_names = ['patch']
     
     def perform_update(self, serializer):
+        # Any authenticated user can set coordinates on an untagged photo,
+        # but only staff can overwrite an existing geotag.
         photo: Photo = self.get_object()
         if (photo.lat is not None or photo.lng is not None) and not self.request.user.is_staff:             # pyright: ignore[reportAttributeAccessIssue]
             raise PermissionDenied("Geotag already exists on photo")
@@ -215,6 +238,12 @@ class ReportPhotoView(APIView):
     RATE_LIMIT = 5
 
     def _get_client_ip(self, request) -> str:
+        """Return the requester's IP, trusting X-Forwarded-For if present.
+
+        Note: X-Forwarded-For can be spoofed unless your proxy strips it.
+        For stricter enforcement, use only REMOTE_ADDR or configure a trusted
+        proxy count.
+        """
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0].strip()
@@ -238,7 +267,7 @@ class ReportPhotoView(APIView):
         serializer = ReportCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # UUIDs from validated_data are not JSON-serializable — stringify them
+        # UUIDs from validated_data are not JSON-serializable - stringify them
         targets = [
             {k: str(v) if hasattr(v, 'hex') else v for k, v in t.items()}
             for t in serializer.validated_data['targets']
@@ -303,6 +332,7 @@ class AdminReportActionView(APIView):
 
 
 class DownloadRateThrottle(UserRateThrottle):
+    """Rate throttle for photo downloads. Configure rate in settings under ``REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['photo_download']``."""
     scope = 'photo_download'
 
 
@@ -310,7 +340,7 @@ class PhotoDownloadView(APIView):
     """Download one or more photos as a ZIP (or a single file).
 
     POST /api/v1/photos/download/
-    Body: { "ids": ["<uuid>", ...] }  — max 50 IDs.
+    Body: { "ids": ["<uuid>", ...] }  - max 50 IDs.
     Requires authentication (OTP or admin session).
     """
     permission_classes = [IsAuthenticated]
@@ -345,7 +375,7 @@ class PhotoDownloadView(APIView):
             response['Content-Disposition'] = f'attachment; filename="{photo["slug"]}.{ext}"'
             return response
 
-        # Multiple photos — build ZIP, failing hard on any R2 error
+        # Multiple photos - build ZIP, failing hard on any R2 error
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, mode='w', compression=zipfile.ZIP_STORED) as zf:
             for photo in photos:
@@ -397,7 +427,7 @@ class CategoryDeleteView(APIView):
             }
             for p in photos
         ]
-        print(f'[CategoryDelete] Deleting "{category.name}" (slug={slug}), reassigning {len(reassigned)} photos')
+        logger.info('Deleting category "%s" (slug=%s), reassigning %d photos', category.name, slug, len(reassigned))
 
         # Reassign ALL photos (including trashed) so the FK constraint is satisfied
         Photo.objects.filter(category=category).update(category=uncategorized)

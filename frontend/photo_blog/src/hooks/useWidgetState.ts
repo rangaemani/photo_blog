@@ -11,6 +11,10 @@ const WIDGET_SIZES: Record<WidgetType, { width: number; height: number }> = {
   musicPlayer: { width: 240, height: 120 },
 };
 
+/**
+ * Compute a default bottom-right position for a widget.
+ * Stacks widgets upward based on `index` so multiple open widgets don't overlap.
+ */
 function defaultPosition(type: WidgetType, index: number): Position {
   const w = WIDGET_SIZES[type].width;
   const h = WIDGET_SIZES[type].height;
@@ -27,6 +31,12 @@ function loadWidgets(): WidgetState[] {
   return [];
 }
 
+/**
+ * Manages desktop widget lifecycle — open/close, position persistence, and move.
+ *
+ * Widget state is persisted to localStorage. On first open, each widget is placed
+ * in the bottom-right corner; subsequent opens restore the last known position.
+ */
 export function useWidgetState() {
   const [widgets, setWidgets] = useState<WidgetState[]>(loadWidgets);
   const initialized = useRef(false);

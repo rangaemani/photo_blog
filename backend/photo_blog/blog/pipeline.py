@@ -20,6 +20,7 @@ class PipelineError(Exception):
 
 
 def _get_r2_client():
+    """Create a boto3 S3 client pointed at the configured Cloudflare R2 endpoint."""
     return boto3.client(
         's3',
         endpoint_url=settings.R2_ENDPOINT_URL,
@@ -40,7 +41,7 @@ def process_upload(file_obj: UploadedFile, photo_id: uuid.UUID):
     file_bytes = file_obj.read()
     file_size = len(file_bytes)
 
-    # Force full image decode immediately — catches corrupt files before
+    # Force full image decode, immediately catches corrupt files before
     # we spend time uploading them to R2.
     try:
         image = Image.open(io.BytesIO(file_bytes))
@@ -102,8 +103,13 @@ def process_upload(file_obj: UploadedFile, photo_id: uuid.UUID):
 
 
 def _generate_thumbnail(image: Image.Image) -> bytes:
+    """Resize to max 600px wide and encode as WEBP at quality 85.
+
+    ``convert('RGB')`` normalises PNGs with alpha and other non-RGB modes.
+    Saving as WEBP (no EXIF passthrough) strips GPS data from the thumbnail,
+    which is intentional.
+    """
     # convert('RGB') handles PNGs with alpha channel and other non-RGB modes.
-    # Saving as WEBP without the original EXIF strips GPS data from the thumbnail.
     thumb = image.convert('RGB')
     thumb.thumbnail((600, 9999), Image.Resampling.LANCZOS)
     buf = io.BytesIO()
@@ -112,24 +118,35 @@ def _generate_thumbnail(image: Image.Image) -> bytes:
 
 
 def _generate_blurhash(image: Image.Image) -> str:
-    # Blurhash only needs a rough color sample — 64px is more than sufficient
-    # and keeps encoding fast.
+    """Encode a 4×3 component blurhash string from the image.
+
+    Downsamples to 64px before encoding - blurhash only needs a rough color
+    sample, and smaller input keeps encoding fast.
+    """
+    # Blurhash only needs a rough color sample - 64px is more than sufficient.
     small = image.convert('RGB')
     small.thumbnail((64, 64), Image.Resampling.LANCZOS)
     w, h = small.size
-    # blurhash expects pixels[y][x] = (r, g, b) — a 2D list of rows
+    # blurhash expects pixels[y][x] = (r, g, b) - a 2D list of rows
     pixels = [[small.getpixel((x, y)) for x in range(w)] for y in range(h)]
     return blurhash.encode(pixels, components_x=4, components_y=3)
 
 
 def _extract_exif(file_bytes: bytes) -> dict[str, Any]:
+    """Parse EXIF tags from raw image bytes and return a partial Photo field dict.
+
+    Extracts: ``taken_at``, ``camera_make``, ``camera_model``, ``lens``,
+    ``focal_length``, ``aperture``, ``shutter_speed``, ``iso``, ``lat``, ``lng``.
+    Missing or unparseable tags are silently omitted from the result.
+    GPS DMS triplets are converted to signed decimal degrees (S/W = negative).
+    """
     tags = exifread.process_file(io.BytesIO(file_bytes), details=False)
     result = {}
 
     if 'EXIF DateTimeOriginal' in tags:
         dt_str = str(tags['EXIF DateTimeOriginal'])
         try:
-            # EXIF timestamps have no timezone — treat as UTC.
+            # EXIF timestamps have no timezone - treat as UTC.
             result['taken_at'] = datetime.strptime(dt_str, '%Y:%m:%d %H:%M:%S').replace(tzinfo=timezone.utc)
         except ValueError:
             logger.warning("Could not parse DateTimeOriginal: %s", dt_str)
@@ -146,7 +163,7 @@ def _extract_exif(file_bytes: bytes) -> dict[str, Any]:
         if tag in tags:
             result[field] = str(tags[tag]).strip()
 
-    # GPS — parse DMS triplet and apply hemisphere ref for correct sign
+    # GPS - parse DMS triplet and apply hemisphere ref for correct sign
     for coord_tag, ref_tag, field in [
         ('GPS GPSLatitude',  'GPS GPSLatitudeRef',  'lat'),
         ('GPS GPSLongitude', 'GPS GPSLongitudeRef', 'lng'),

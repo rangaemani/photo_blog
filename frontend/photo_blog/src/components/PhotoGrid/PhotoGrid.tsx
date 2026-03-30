@@ -23,6 +23,13 @@ interface Props {
   showReportedBadges?: boolean;
 }
 
+/**
+ * Scrollable photo grid with infinite scroll, selection, and drag-source support.
+ *
+ * Uses an `IntersectionObserver` on a sentinel element at the bottom to trigger
+ * `onLoadMore` when the next page is available. Stagger-animates cells on mount.
+ * In select mode, supports shift-click range selection and ctrl/cmd-click toggle.
+ */
 export default function PhotoGrid({ grid, columns, onPhotoClick, onLoadMore, onHover, onHoverEnd, onContextMenu, selectable, isSelected, onToggleSelect, onRangeSelect, onTrashed, onSortChange, isDraggable, sourceWindowId, showReportedBadges }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const orderedIds = useMemo(() => grid.photos.map(p => p.id), [grid.photos]);

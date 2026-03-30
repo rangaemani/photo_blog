@@ -17,6 +17,7 @@ const DEFAULT_SIZES: Record<WindowContentType, { width: number; height: number }
   login: { width: 360, height: 320 },
   upload: { width: 600, height: 500 },
   trash: { width: 800, height: 560 },
+  reports: { width: 800, height: 560 },
 };
 
 const MIN_SIZES: Record<WindowContentType, { width: number; height: number }> = {
@@ -25,7 +26,8 @@ const MIN_SIZES: Record<WindowContentType, { width: number; height: number }> = 
   static: { width: 320, height: 280 },
   login:  { width: 320, height: 280 },
   upload: { width: 400, height: 360 },
-  trash:  { width: 360, height: 300 },
+  trash:   { width: 360, height: 300 },
+  reports: { width: 360, height: 300 },
 };
 
 interface WindowPayload {
@@ -36,8 +38,14 @@ interface WindowPayload {
   uploadPayload?: UploadPayload;
 }
 
-/** Manages the desktop window lifecycle — open, close, focus, minimize, maximize, move, and resize.
- * @returns Window state array and mutation methods: openWindow, closeWindow, focusWindow, minimizeWindow, maximizeWindow, moveWindow, resizeWindow, updateWindow.
+/**
+ * Manages the desktop window lifecycle — open, close, focus, minimize, maximize, move, and resize.
+ *
+ * On mobile (viewport < 600px), `openWindow` ignores the staggered position and opens
+ * fullscreen. Window sizing respects per-type minimums defined in `MIN_SIZES`.
+ *
+ * @returns `windows` array plus: `openWindow`, `closeWindow`, `focusWindow`,
+ *   `minimizeWindow`, `maximizeWindow`, `moveWindow`, `resizeWindow`, `updateWindow`.
  */
 export function useWindowManager() {
   const [windows, setWindows] = useState<WindowState[]>([]);

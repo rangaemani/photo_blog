@@ -162,7 +162,7 @@ class OTPVerifyView(View):
             logger.warning('[OTP] Invalid code for %s, %d attempts remaining', identifier, remaining)
             return JsonResponse({'ok': False, 'error': 'invalid_code', 'attempts_remaining': remaining}, status=400)
 
-        # Code is valid — mark as used and create/find user atomically
+        # Code is valid - mark as used and create/find user atomically
         with transaction.atomic():
             otp.is_used = True
             otp.save(update_fields=['is_used'])

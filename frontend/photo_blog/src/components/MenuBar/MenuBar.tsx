@@ -20,6 +20,12 @@ interface Props {
   openWidgetTypes: WidgetType[];
 }
 
+/**
+ * Top menu bar with File / View / Go / Help menus and a system clock.
+ *
+ * Menu definitions are memoized and rebuild only when auth state or categories change.
+ * Hovering between open menus switches focus immediately (classic menu bar behavior).
+ */
 export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, onOpenStatic, onToggleGridSize, onOpenLogin, onOpenUpload, onOpenReports, onResetDesktop, onToggleWidget, openWidgetTypes }: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [clock, setClock] = useState('');

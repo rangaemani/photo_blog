@@ -23,14 +23,18 @@ export interface User {
 export interface OTPRequestResponse {
   ok: boolean;
   identifier_type: 'email' | 'phone';
+  /** Seconds until the OTP expires. */
   expires_in: number;
 }
 
 export interface OTPVerifyResponse {
   ok: boolean;
+  /** True if this is the user's first login — they need to set a display name. */
   is_new?: boolean;
   user?: User;
+  /** Present on failure (invalid code, expired, etc.). */
   error?: string;
+  /** How many verification attempts remain before the code is invalidated. */
   attempts_remaining?: number;
 }
 
@@ -164,12 +168,14 @@ export interface DesktopIconState {
   thumbnailUrl?: string;
 }
 
+/** Payload carried through the drag-drop context while a photo is being dragged. */
 export interface ActiveDrag {
   photoId: string;
   photoSlug: string;
   thumbnailUrl: string;
+  /** Where the drag originated — affects drop handling (e.g. grid-cell drags can be removed from their window). */
   sourceKind: 'grid-cell' | 'desktop-icon';
-  /** Window ID if dragged from a grid window — used to remove the photo on drop */
+  /** Window ID if dragged from a grid window — used to remove the photo on drop. */
   sourceWindowId?: string;
 }
 
@@ -235,9 +241,11 @@ export interface WindowState {
   windowType: WindowContentType;
   position: Position;
   size: Size;
+  /** Saved geometry from before the last maximize, used to restore on un-maximize. */
   preMaximizeRect?: Position & Size;
   isMaximized: boolean;
   isMinimized: boolean;
+  /** Stacking order. Higher = on top. Incremented by `focusWindow`. */
   zIndex: number;
   gridPayload?: GridPayload;
   detailPayload?: DetailPayload;

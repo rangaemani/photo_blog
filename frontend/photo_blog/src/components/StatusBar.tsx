@@ -8,6 +8,12 @@ interface Props {
   onMinimizeWindow: (id: string) => void;
 }
 
+/**
+ * Fixed bottom bar — status text on the left, window taskbar pills on the right.
+ *
+ * Each pill represents an open window. Clicking a minimized pill restores it;
+ * clicking the focused window's pill minimizes it; clicking any other pill brings it to front.
+ */
 export default function StatusBar({ statusText, windows, onWindowClick, onMinimizeWindow }: Props) {
   const topZ = windows.length > 0
     ? Math.max(...windows.filter(w => !w.isMinimized).map(w => w.zIndex), 0)

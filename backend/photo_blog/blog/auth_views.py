@@ -10,6 +10,10 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
+    """POST /api/v1/auth/login/: username/password login (admin accounts only).
+
+    Sets a session cookie and issues a CSRF token on success.
+    """
     def post(self, request):
         try:
             body = json.loads(request.body)
@@ -35,6 +39,7 @@ class LoginView(View):
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class LogoutView(View):
+    """POST /api/v1/auth/logout/: invalidate the current session."""
     def post(self, request):
         logout(request)
         return JsonResponse({'ok': True})
@@ -42,12 +47,23 @@ class LogoutView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CsrfTokenView(View):
+    """GET /api/v1/auth/csrf/: set and return the CSRF token.
+
+    Called on app init so the frontend can include X-CSRFToken on subsequent
+    mutating requests. ``csrf_exempt`` is intentional; the endpoint's sole
+    purpose is to bootstrap CSRF protection.
+    """
     def get(self, request):
         return JsonResponse({'csrfToken': get_token(request)})
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class UserView(View):
+    """GET /api/v1/auth/user/: return the currently authenticated user's profile.
+
+    Returns 401 if not logged in. Also ensures the CSRF cookie is set,
+    so this doubles as a session-check-plus-csrf-refresh on page load.
+    """
     def get(self, request):
         if not request.user.is_authenticated:
             return JsonResponse({'error': 'Not authenticated'}, status=401)

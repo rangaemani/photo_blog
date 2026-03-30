@@ -104,10 +104,11 @@ export function setDisplayName(display_name: string): Promise<{ ok: boolean; use
 
 // === Photos (public) ===
 
-/** Fetch paginated photo list, optionally filtered by category.
- * @param categorySlug - Filter by category. Omit for all photos.
- * @param page - Page number for pagination.
- * @returns Paginated list of photo summaries.
+/** Fetch the first page of photos, optionally filtered by category.
+ * @param categorySlug - Filter to a single category. Omit for all photos.
+ * @param order - Sort direction — `'desc'` for newest first (default), `'asc'` for oldest first.
+ * @param includeReported - If true, include photos that have pending reports (admin use).
+ * @returns First page of photo summaries with pagination cursor.
  */
 export function getPhotos(categorySlug?: string, order: 'asc' | 'desc' = 'desc', includeReported = false): Promise<PaginatedResponse<PhotoListItem>> {
   const params = new URLSearchParams();
@@ -196,6 +197,12 @@ export function patchPhotoCategory(slug: string, categorySlug: string): Promise<
   return patchJSON(`${API_BASE}/photos/${slug}/patch/`, { category: categorySlug });
 }
 
+/** Update the geotag coordinates for a photo (admin only).
+ * Pass `null` for both to clear the location.
+ * @param slug - The photo's unique slug.
+ * @param lat - Latitude, or `null` to clear.
+ * @param lng - Longitude, or `null` to clear.
+ */
 export function patchPhotoLocation(slug: string, lat: number | null, lng: number | null): Promise<{ lat: number | null; lng: number | null }> {
   return patchJSON(`${API_BASE}/photos/${slug}/geotag/`, { lat, lng });
 }
@@ -315,39 +322,79 @@ export async function downloadPhotos(ids: string[]): Promise<DownloadResult> {
 
 // === Reactions & Comments ===
 
+/** Toggle an emoji reaction on a photo. Adds it if not present, removes it if already set.
+ * @param slug - The photo's unique slug.
+ * @param emoji - The emoji character to react with.
+ * @returns Whether the reaction is now active, plus the updated aggregate counts.
+ */
 export function toggleReaction(slug: string, emoji: string): Promise<ToggleReactionResponse> {
   return postJSON(`${API_BASE}/photos/${slug}/react/`, { emoji });
 }
 
+/** Fetch paginated comments for a photo.
+ * @param slug - The photo's unique slug.
+ * @param page - Page number (omit for first page).
+ */
 export function getComments(slug: string, page?: number): Promise<PaginatedResponse<CommentItem>> {
   const qs = page ? `?page=${page}` : '';
   return fetchJSON(`${API_BASE}/photos/${slug}/comments/${qs}`);
 }
 
+/** Post a new comment on a photo (requires authentication).
+ * @param slug - The photo's unique slug.
+ * @param text - Comment body text.
+ * @returns The newly created comment.
+ */
 export function postComment(slug: string, text: string): Promise<CommentItem> {
   return postJSON(`${API_BASE}/photos/${slug}/comments/`, { text });
 }
 
+/** Delete a comment (admin only).
+ * @param slug - The photo's unique slug.
+ * @param commentId - ID of the comment to delete.
+ */
 export function deleteComment(slug: string, commentId: string): Promise<{ ok: boolean }> {
   return deleteJSON(`${API_BASE}/photos/${slug}/comments/${commentId}/`);
 }
 
 // === Tags ===
 
+/** Add a text tag to a photo (requires authentication).
+ * @param slug - The photo's unique slug.
+ * @param text - Tag text.
+ * @returns Updated full tag list for the photo.
+ */
 export function addTag(slug: string, text: string): Promise<{ tags: TagItem[] }> {
   return postJSON(`${API_BASE}/photos/${slug}/tags/`, { text });
 }
 
+/** Remove a tag from a photo (admin or tag owner).
+ * @param slug - The photo's unique slug.
+ * @param tagId - ID of the tag to remove.
+ * @returns Updated full tag list for the photo.
+ */
 export function removeTag(slug: string, tagId: string): Promise<{ tags: TagItem[] }> {
   return deleteJSON(`${API_BASE}/photos/${slug}/tags/${tagId}/`);
 }
 
 // === Pop Tags ===
 
+/** Add a positioned pop-tag overlay on a photo (requires authentication).
+ * @param slug - The photo's unique slug.
+ * @param label - Tag label text.
+ * @param x - Horizontal position as a percentage of image width (0–100).
+ * @param y - Vertical position as a percentage of image height (0–100).
+ * @returns Updated full pop-tag list for the photo.
+ */
 export function addPopTag(slug: string, label: string, x: number, y: number): Promise<{ pop_tags: PopTagItem[] }> {
   return postJSON(`${API_BASE}/photos/${slug}/pop-tags/`, { label, x, y });
 }
 
+/** Remove a pop-tag from a photo (admin or tag owner).
+ * @param slug - The photo's unique slug.
+ * @param tagId - ID of the pop-tag to remove.
+ * @returns Updated full pop-tag list for the photo.
+ */
 export function removePopTag(slug: string, tagId: string): Promise<{ pop_tags: PopTagItem[] }> {
   return deleteJSON(`${API_BASE}/photos/${slug}/pop-tags/${tagId}/`);
 }
@@ -372,24 +419,42 @@ export interface AdminReport {
   reviewed_at: string | null;
 }
 
+/** Submit a content report for a photo (unauthenticated allowed).
+ * @param slug - The photo's unique slug.
+ * @param targets - One or more content items being reported (image, tags, comments).
+ * @param reason - Free-text description of the issue.
+ * @returns The created report's ID.
+ */
 export function reportPhoto(slug: string, targets: ReportTarget[], reason: string): Promise<{ id: string }> {
   return postJSON(`${API_BASE}/photos/${slug}/report/`, { targets, reason });
 }
 
+/** Fetch all pending and reviewed reports (admin only). */
 export function getAdminReports(): Promise<AdminReport[]> {
   return fetchJSON(`${API_BASE}/admin/reports/`);
 }
 
+/** Take action on a report: dismiss it or delete the reported content (admin only).
+ * @param id - The report ID.
+ * @param action - `'dismiss'` marks it reviewed without removing content; `'delete'` removes the reported items.
+ */
 export function actionReport(id: string, action: 'dismiss' | 'delete'): Promise<{ ok: boolean }> {
   return postJSON(`${API_BASE}/admin/reports/${id}/action/`, { action });
 }
 
 // === Shared Layouts ===
 
+/** Persist a desktop layout blob server-side and return a shareable slug.
+ * @param blob - The full desktop state to share.
+ * @returns A short slug that can be used to retrieve the layout via `getSharedLayout`.
+ */
 export function shareLayout(blob: DesktopBlob): Promise<{ slug: string }> {
   return postJSON(`${API_BASE}/layouts/`, blob);
 }
 
+/** Retrieve a previously shared desktop layout by slug.
+ * @param slug - The share slug returned by `shareLayout`.
+ */
 export function getSharedLayout(slug: string): Promise<DesktopBlob> {
   return fetchJSON(`${API_BASE}/layouts/${slug}/`);
 }

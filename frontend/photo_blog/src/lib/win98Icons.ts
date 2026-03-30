@@ -1,4 +1,3 @@
-// Win98 icon URLs — sized variants: -0=16px, -1=24px, -3=32px, -4=48px
 import camera3Sm from '../assets/windows98-icons/png/camera3-0.png';
 import camera3Lg from '../assets/windows98-icons/png/camera3-3.png';
 import imageJpegSm from '../assets/windows98-icons/png/image_old_jpeg-0.png';

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Win98-style indeterminate progress ticker.
+ * Indeterminate progress ticker.
  * Renders a small inset bar with a marching highlight block.
  * Use inline for button-adjacent feedback or as a full-width bar via `block` prop.
  */
