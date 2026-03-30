@@ -1,5 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
 import type { WidgetState, WidgetType } from '../../types';
+import { isMobile } from '../../utils/position';
 import WidgetShell from './WidgetShell';
 import ClockWidget from './ClockWidget';
 import NotesWidget from './NotesWidget';
@@ -40,6 +41,10 @@ interface Props {
 }
 
 export default function WidgetLayer({ widgets, onMove, onClose }: Props) {
+  // Widgets are floating overlays; on mobile all windows are fullscreen (z-index 100+)
+  // and would cover widgets (z-index 50). Suppress the layer entirely on mobile.
+  if (isMobile()) return null;
+
   return (
     <AnimatePresence>
       {widgets.filter(w => w.isOpen).map(w => {

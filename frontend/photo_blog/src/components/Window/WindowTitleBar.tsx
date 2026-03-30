@@ -1,5 +1,6 @@
 import type { WindowContentType } from '../../types';
 import { icons } from '../../lib/win98Icons';
+import { isMobile } from '../../utils/position';
 
 interface Props {
   title: string;
@@ -21,15 +22,20 @@ const TYPE_ICONS: Record<WindowContentType, string> = {
 };
 
 export default function WindowTitleBar({ title, windowType, onClose, onMinimize, onMaximize, onPointerDown }: Props) {
+  // On mobile, windows are always fullscreen. Expose neither the maximize toggle
+  // (which would flip isMaximized to false and re-enable resize edges) nor the
+  // double-click handler.
+  const mobile = isMobile();
+
   return (
-    <div className="drag-handle" style={styles.bar} onPointerDown={onPointerDown} onDoubleClick={onMaximize}>
+    <div className="drag-handle" style={styles.bar} onPointerDown={onPointerDown} onDoubleClick={mobile ? undefined : onMaximize}>
       <div style={styles.left}>
         <img src={TYPE_ICONS[windowType]} alt="" style={styles.icon} draggable={false} />
       </div>
       <div style={styles.title}>{title}</div>
       <div style={styles.controls}>
         <button className="win-btn" onClick={(e) => { e.stopPropagation(); onMinimize(); }} title="Minimize">&mdash;</button>
-        <button className="win-btn" onClick={(e) => { e.stopPropagation(); onMaximize(); }} title="Maximize">&#9634;</button>
+        {!mobile && <button className="win-btn" onClick={(e) => { e.stopPropagation(); onMaximize(); }} title="Maximize">&#9634;</button>}
         <button className="win-btn win-btn-close" onClick={(e) => { e.stopPropagation(); onClose(); }} title="Close">&#10005;</button>
       </div>
     </div>

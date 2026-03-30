@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import type { Category, WidgetType } from '../../types';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useSoundContext } from '../../contexts/SoundContext';
+import { isMobile } from '../../utils/position';
 import { icons } from '../../lib/win98Icons';
 import MenuDropdown from './MenuDropdown';
 
@@ -55,6 +56,8 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
 
   const ctrlKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+';
 
+  const mobile = isMobile();
+
   const menus = useMemo<Record<string, { label: string; action?: () => void; divider?: boolean; disabled?: boolean; external?: boolean; shortcut?: string }[]>>(() => ({
     File: [
       { label: 'New Window', action: onOpenAllPhotos, shortcut: `${ctrlKey}N` },
@@ -80,12 +83,14 @@ export default function MenuBar({ categories, onOpenAllPhotos, onOpenCategory, o
       { label: '', divider: true },
       { label: 'Toggle Grid Size', action: onToggleGridSize },
       { label: 'Cycle Windows', shortcut: `${ctrlKey}\``, disabled: true },
-      { label: '', divider: true },
-      { label: `${openWidgetTypes.includes('clock') ? '* ' : ''}Clock`, action: () => onToggleWidget('clock') },
-      { label: `${openWidgetTypes.includes('notes') ? '* ' : ''}Sticky Notes`, action: () => onToggleWidget('notes') },
-      { label: `${openWidgetTypes.includes('weather') ? '* ' : ''}Weather`, action: () => onToggleWidget('weather') },
-      { label: `${openWidgetTypes.includes('systemInfo') ? '* ' : ''}System Info`, action: () => onToggleWidget('systemInfo') },
-      { label: `${openWidgetTypes.includes('musicPlayer') ? '* ' : ''}Music Player`, action: () => onToggleWidget('musicPlayer') },
+      ...(!mobile ? [
+        { label: '', divider: true },
+        { label: `${openWidgetTypes.includes('clock') ? '* ' : ''}Clock`, action: () => onToggleWidget('clock') },
+        { label: `${openWidgetTypes.includes('notes') ? '* ' : ''}Sticky Notes`, action: () => onToggleWidget('notes') },
+        { label: `${openWidgetTypes.includes('weather') ? '* ' : ''}Weather`, action: () => onToggleWidget('weather') },
+        { label: `${openWidgetTypes.includes('systemInfo') ? '* ' : ''}System Info`, action: () => onToggleWidget('systemInfo') },
+        { label: `${openWidgetTypes.includes('musicPlayer') ? '* ' : ''}Music Player`, action: () => onToggleWidget('musicPlayer') },
+      ] : []),
     ],
     Go: [
       { label: 'Home', action: onOpenAllPhotos },

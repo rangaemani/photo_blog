@@ -89,7 +89,7 @@ export default function MusicPlayerWidget() {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
       }}>
-        {hasTracks ? (track?.title ?? 'Unknown') : 'No tracks — add MP3s to /public/music/'}
+        {hasTracks ? (track?.title ?? 'Unknown') : 'No tracks - add MP3s to /public/music/'}
       </div>
 
       {/* Progress bar */}
@@ -111,11 +111,11 @@ export default function MusicPlayerWidget() {
 
       {/* Controls */}
       <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-        <button className="win-btn" onClick={prev} disabled={!hasTracks} style={{ fontSize: 9, padding: '0 6px' }}>&#9664;&#9664;</button>
+        <button className="win-btn" onClick={prev} disabled={!hasTracks} style={{ fontSize: 9, padding: '0 6px' }}>{'◀◀'}</button>
         <button className="win-btn" onClick={togglePlay} disabled={!hasTracks} style={{ fontSize: 9, padding: '0 8px', fontWeight: 700 }}>
-          {playing ? '&#9646;&#9646;' : '&#9654;'}
+          {playing ? '▮▮' : '▶'}
         </button>
-        <button className="win-btn" onClick={next} disabled={!hasTracks} style={{ fontSize: 9, padding: '0 6px' }}>&#9654;&#9654;</button>
+        <button className="win-btn" onClick={next} disabled={!hasTracks} style={{ fontSize: 9, padding: '0 6px' }}>{'▶▶'}</button>
         <input
           type="range" min={0} max={1} step={0.05}
           value={volume}
