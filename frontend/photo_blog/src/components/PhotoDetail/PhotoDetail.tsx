@@ -166,6 +166,14 @@ export default function PhotoDetail({
   const aspect = photo.width / photo.height;
   const isWideMode = windowWidth >= 700;
 
+  // In compact (mobile) mode, constrain the image container height to the photo's
+  // natural aspect ratio so landscape photos aren't cropped. Capped at 55% of the
+  // window height so the meta panel below is always reachable.
+  const compactImgH = Math.min(
+    Math.floor(windowWidth / aspect),
+    Math.floor(windowHeight * 0.55),
+  );
+
   // Compute image dimensions using object-fit:contain logic (wide mode only)
   let imgW: number | undefined;
   let imgH: number | undefined;
@@ -199,7 +207,7 @@ export default function PhotoDetail({
         onLoad={() => setThumbLoaded(true)}
         style={{
           ...styles.imgLayer,
-          objectFit: "cover",
+          objectFit: isWideMode ? "cover" : "contain",
           opacity: thumbLoaded && !originalLoaded ? 1 : 0,
           transition: "opacity 200ms",
         }}
@@ -210,7 +218,7 @@ export default function PhotoDetail({
         onLoad={() => setOriginalLoaded(true)}
         style={{
           ...styles.imgLayer,
-          objectFit: "cover",
+          objectFit: isWideMode ? "cover" : "contain",
           opacity: originalLoaded ? 1 : 0,
           transition: "opacity 200ms",
         }}
@@ -360,8 +368,8 @@ export default function PhotoDetail({
         </div>
       ) : (
         <>
-          {/* Compact mode: image fills area, no mat */}
-          <div style={styles.compactImage} onContextMenu={handleContext}>
+          {/* Compact mode: image fills area, height constrained to aspect ratio */}
+          <div style={{ ...styles.compactImage, flex: 'none', height: compactImgH }} onContextMenu={handleContext}>
             {imageStack}
           </div>
           {metaPanel}
