@@ -89,7 +89,7 @@ export default function MusicPlayerWidget() {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
       }}>
-        {hasTracks ? (track?.title ?? 'Unknown') : 'No tracks - add MP3s to /public/music/'}
+        {hasTracks ? (track?.title ?? 'Unknown') : 'No tracks - check back later ;)'}
       </div>
 
       {/* Progress bar */}
