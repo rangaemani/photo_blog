@@ -17,7 +17,7 @@ class PhotoListSerializer(serializers.ModelSerializer):
 
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = Photo
-        fields = ['id', 'title', 'slug', 'thumbnail_url', 'width', 'height', 'category_slug', 'blurhash', 'taken_at', 'lat', 'lng', 'is_reported']
+        fields = ['id', 'title', 'slug', 'thumbnail_url', 'width', 'height', 'category_slug', 'blurhash', 'taken_at', 'lat', 'lng', 'location_name', 'is_reported']
 
     def get_thumbnail_url(self, obj: Photo) -> str:
         return f'{settings.R2_BASE_URL}/{obj.thumbnail_key}'

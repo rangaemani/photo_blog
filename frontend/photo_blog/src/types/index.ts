@@ -52,6 +52,7 @@ export interface PhotoListItem {
   blurhash: string;
   lat: number | null;
   lng: number | null;
+  location_name: string | null;
   is_reported: boolean;
 }
 

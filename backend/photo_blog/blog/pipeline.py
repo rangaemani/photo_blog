@@ -1,5 +1,7 @@
 import io
+import json
 import logging
+import urllib.request
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -90,6 +92,11 @@ def process_upload(file_obj: UploadedFile, photo_id: uuid.UUID):
         _try_delete(client, original_key)
         _try_delete(client, thumbnail_key)
         raise PipelineError(f"Post-upload processing failed: {e}") from e
+
+    if 'lat' in exif_data and 'lng' in exif_data:
+        location_name = _reverse_geocode(exif_data['lat'], exif_data['lng'])
+        if location_name:
+            exif_data['location_name'] = location_name
 
     return {
         'original_key': original_key,
@@ -189,6 +196,31 @@ def _extract_exif(file_bytes: bytes) -> dict[str, Any]:
             pass
 
     return result
+
+
+def _reverse_geocode(lat: float, lng: float) -> str | None:
+    """Look up a human-readable city/locality for a coordinate via Nominatim.
+
+    Best-effort: returns None on any network or parse failure so the upload
+    pipeline continues unaffected.
+    """
+    url = f'https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}'
+    req = urllib.request.Request(url, headers={'User-Agent': 'photo-blog/1.0'})
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+        addr = data.get('address', {})
+        return (
+            addr.get('city')
+            or addr.get('town')
+            or addr.get('village')
+            or addr.get('county')
+            or data.get('name')
+            or None
+        )
+    except Exception:
+        logger.warning("Nominatim reverse geocode failed for (%s, %s)", lat, lng)
+        return None
 
 
 def delete_from_r2(original_key: str, thumbnail_key: str) -> None:

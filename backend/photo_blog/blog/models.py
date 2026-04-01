@@ -47,6 +47,7 @@ class Photo(models.Model):
     shutter_speed = models.CharField(max_length=20, null=True, blank=True)
     lat = models.FloatField(null=True, blank=True)
     lng = models.FloatField(null=True, blank=True)
+    location_name = models.CharField(max_length=200, null=True, blank=True)
     blurhash = models.CharField(max_length=64)
     file_size = models.BigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
