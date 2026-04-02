@@ -129,7 +129,7 @@ function AppInner() {
       if (!isAuthenticated && localPhotos.length > 0) {
         const extras: PhotoListItem[] = localPhotos
           .filter(lp => !grid.photos.some(p => p.id === lp.id))
-          .map(lp => ({ ...lp, taken_at: null, category_slug: categorySlug ?? '', lat: null, lng: null, is_reported: false }));
+          .map(lp => ({ ...lp, taken_at: null, category_slug: categorySlug ?? '', location_name: null, lat: null, lng: null, is_reported: false }));
         const merged = [...grid.photos, ...extras];
         wm.updateWindow(id, {
           title: `${title} — ${merged.length} photos`,
@@ -213,7 +213,7 @@ function AppInner() {
       // Guest folders: populate from persisted folder contents
       if (icon.id.startsWith('guest-folder-')) {
         const refs = desktop.getFolderContents(icon.id);
-        const folderPhotos: PhotoListItem[] = refs.map(r => ({ ...r, taken_at: null, category_slug: '', lat: null, lng: null, is_reported: false }));
+        const folderPhotos: PhotoListItem[] = refs.map(r => ({ ...r, taken_at: null, category_slug: '', location_name: null, lat: null, lng: null, is_reported: false }));
         sound.play('windowOpen');
         wm.openWindow(
           folderPhotos.length > 0 ? `${icon.label} — ${folderPhotos.length} photos` : icon.label,
@@ -413,7 +413,7 @@ function AppInner() {
         if (win.windowType === 'grid' && win.gridPayload?.categorySlug === categorySlug) {
           const existing = win.gridPayload.photos;
           if (!existing.some(p => p.id === drag.photoId) && ref) {
-            const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: categorySlug, lat: null, lng: null, is_reported: false };
+            const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: categorySlug, location_name: null, lat: null, lng: null, is_reported: false };
             const merged = [...existing, asListItem];
             const baseName = win.title.split(' — ')[0];
             wm.updateWindow(win.id, {
@@ -447,7 +447,7 @@ function AppInner() {
       if (win.windowType === 'grid' && win.gridPayload?.categorySlug === folderId) {
         const existing = win.gridPayload.photos;
         if (!existing.some(p => p.id === drag.photoId) && ref) {
-          const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: '', lat: null, lng: null, is_reported: false };
+          const asListItem: PhotoListItem = { ...ref, taken_at: null, category_slug: '', location_name: null, lat: null, lng: null, is_reported: false };
           const merged = [...existing, asListItem];
           const baseName = win.title.split(' — ')[0];
           wm.updateWindow(win.id, {

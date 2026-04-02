@@ -11,9 +11,10 @@ interface NominatimResult {
 
 interface Props {
   photoSlug: string;
+  currentLocation: string | null;
   currentLat: number | null;
   currentLng: number | null;
-  onSaved: (lat: number | null, lng: number | null) => void;
+  onSaved: (location: string | null, lat: number | null, lng: number | null) => void;
 }
 
 const INPUT_STYLE: React.CSSProperties = {
@@ -42,7 +43,7 @@ const BTN_STYLE: React.CSSProperties = {
   whiteSpace: 'nowrap' as const,
 };
 
-export default function GeotagPicker({ photoSlug, currentLat, currentLng, onSaved }: Props) {
+export default function GeotagPicker({ photoSlug, currentLocation, currentLat, currentLng, onSaved }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [selected, setSelected] = useState<NominatimResult | null>(null);
@@ -53,7 +54,7 @@ export default function GeotagPicker({ photoSlug, currentLat, currentLng, onSave
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const hasLocation = currentLat !== null && currentLng !== null;
+  const hasLocation = currentLocation !== null || currentLat !== null && currentLng !== null;
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -91,9 +92,9 @@ export default function GeotagPicker({ photoSlug, currentLat, currentLng, onSave
     if (!selected) return;
     setSaving(true);
     setError(null);
-    try {
-      await patchPhotoLocation(photoSlug, parseFloat(selected.lat), parseFloat(selected.lon));
-      onSaved(parseFloat(selected.lat), parseFloat(selected.lon));
+    try {      
+      await patchPhotoLocation(photoSlug, String(selected.display_name), parseFloat(selected.lat), parseFloat(selected.lon));
+      onSaved(String(selected.display_name), parseFloat(selected.lat), parseFloat(selected.lon));
       setOpen(false);
       setSelected(null);
       setQuery('');
@@ -109,8 +110,8 @@ export default function GeotagPicker({ photoSlug, currentLat, currentLng, onSave
     setSaving(true);
     setError(null);
     try {
-      await patchPhotoLocation(photoSlug, null, null);
-      onSaved(null, null);
+      await patchPhotoLocation(photoSlug, null, null, null);
+      onSaved(null, null, null);
       setSelected(null);
       setQuery('');
     } catch {
@@ -144,9 +145,17 @@ export default function GeotagPicker({ photoSlug, currentLat, currentLng, onSave
 
       {/* Current location display */}
       {hasLocation && !open && (
-        <div style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '2px 0' }}>
-          {currentLat!.toFixed(4)}, {currentLng!.toFixed(4)}
-        </div>
+        <>
+          {currentLocation !== undefined ?  (
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '2px 0' }}>
+              {currentLocation?.split(',').slice(0, 2).join(', ')}
+            </div>
+          ) :
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '2px 0' }}>
+            {currentLat!.toFixed(4)}, {currentLng!.toFixed(4)}
+          </div>
+        }
+        </>
       )}
 
       {/* Search UI */}

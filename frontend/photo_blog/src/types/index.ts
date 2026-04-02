@@ -49,7 +49,7 @@ export interface PhotoListItem {
   height: number;
   taken_at: string | null;
   category_slug: string;
-  blurhash: string;
+  blurhash: string;  
   lat: number | null;
   lng: number | null;
   location_name: string | null;

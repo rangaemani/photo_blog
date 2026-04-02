@@ -98,8 +98,8 @@ class PhotoCategoryPatchSerializer(serializers.ModelSerializer):
 class PhotoGeotagPatchSerializer(serializers.ModelSerializer):
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = Photo
-        fields = ['lat', 'lng']
-        extra_kwargs = {'lat': {'required': False, 'allow_null': True}, 'lng': {'required': False, 'allow_null': True}}
+        fields = ['location_name', 'lat', 'lng']
+        extra_kwargs = {'location_name': {'required': False, 'allow_null': True}, 'lat': {'required': False, 'allow_null': True}, 'lng': {'required': False, 'allow_null': True}}
 
 
 class CategoryCreateSerializer(serializers.ModelSerializer):

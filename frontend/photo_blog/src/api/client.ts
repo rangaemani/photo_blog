@@ -203,8 +203,8 @@ export function patchPhotoCategory(slug: string, categorySlug: string): Promise<
  * @param lat - Latitude, or `null` to clear.
  * @param lng - Longitude, or `null` to clear.
  */
-export function patchPhotoLocation(slug: string, lat: number | null, lng: number | null): Promise<{ lat: number | null; lng: number | null }> {
-  return patchJSON(`${API_BASE}/photos/${slug}/geotag/`, { lat, lng });
+export function patchPhotoLocation(slug: string, locationName: string | null, lat: number | null, lng: number | null): Promise<{ lat: number | null; lng: number | null }> {  
+  return patchJSON(`${API_BASE}/photos/${slug}/geotag/`, { location_name: locationName, lat, lng });
 }
 
 

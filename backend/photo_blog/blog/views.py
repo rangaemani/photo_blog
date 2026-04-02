@@ -221,14 +221,13 @@ class PhotoGeotagPatchView(generics.UpdateAPIView):
     queryset = Photo.objects.all()
     serializer_class = PhotoGeotagPatchSerializer
     lookup_field = 'slug'
-    http_method_names = ['patch']
-    
+    http_method_names = ['patch']    
     def perform_update(self, serializer):
         # Any authenticated user can set coordinates on an untagged photo,
         # but only staff can overwrite an existing geotag.
         photo: Photo = self.get_object()
-        if (photo.lat is not None or photo.lng is not None) and not self.request.user.is_staff:             # pyright: ignore[reportAttributeAccessIssue]
-            raise PermissionDenied("Geotag already exists on photo")
+        if (photo.location_name is not None or photo.lat is not None or photo.lng is not None) and not self.request.user.is_staff:             # pyright: ignore[reportAttributeAccessIssue]
+            raise PermissionDenied("Geotag already exists on photo")               
         serializer.save()
 
 class ReportPhotoView(APIView):

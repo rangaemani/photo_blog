@@ -68,6 +68,7 @@ export default function PhotoDetail({
   const [showReport, setShowReport] = useState(false);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
 
   const showGeotag = isAuthenticated && (lat === null || selectable);
 
@@ -112,6 +113,7 @@ export default function PhotoDetail({
 
   useEffect(() => {
     if (photo) {
+      setCurrentLocation(photo.location_name);
       setLat(photo.lat);
       setLng(photo.lng);
     }
@@ -289,9 +291,11 @@ export default function PhotoDetail({
       {showGeotag && (
             <GeotagPicker
               photoSlug={photo.slug}
+              currentLocation={currentLocation}
               currentLat={lat}
               currentLng={lng}
-              onSaved={(newLat, newLng) => {
+              onSaved={(newLocation, newLat, newLng) => {
+                setCurrentLocation(newLocation);
                 setLat(newLat);
                 setLng(newLng);
               }}
@@ -355,6 +359,7 @@ export default function PhotoDetail({
             {showGeotag && (
             <GeotagPicker
               photoSlug={photo.slug}
+              currentLocation={currentLocation}
               currentLat={lat}
               currentLng={lng}
               onSaved={(newLat, newLng) => {

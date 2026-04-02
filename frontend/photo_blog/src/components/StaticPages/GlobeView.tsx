@@ -14,11 +14,11 @@ type GlobeMarker = {
 
 interface BuildResult {
   markers: GlobeMarker[];
-  clusters: ClusterEntry[];
+  clusters: MarkerEntry[];
 }
 
 function buildMarkers(photos: PhotoListItem[]): BuildResult {
-  const counts = new Map<string, ClusterEntry>();
+  const counts = new Map<string, MarkerEntry>();
   for (const p of photos) {
     if (p.lat === null || p.lng === null) continue;
     // Cluster to ~11km grid (1 decimal degree)
@@ -40,7 +40,7 @@ function buildMarkers(photos: PhotoListItem[]): BuildResult {
   return { markers, clusters };
 }
 
-interface ClusterEntry {
+interface MarkerEntry {
   lat: number;
   lng: number;
   count: number;
@@ -52,7 +52,7 @@ interface FetchDebug {
   photos: number;
   geotagged: number;
   clusters: number;
-  clusterList: ClusterEntry[];
+  clusterList: MarkerEntry[];
   error: string | null;
 }
 
