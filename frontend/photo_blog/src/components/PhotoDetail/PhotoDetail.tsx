@@ -362,7 +362,8 @@ export default function PhotoDetail({
               currentLocation={currentLocation}
               currentLat={lat}
               currentLng={lng}
-              onSaved={(newLat, newLng) => {
+              onSaved={(newLocation, newLat, newLng) => {
+                setCurrentLocation(newLocation);
                 setLat(newLat);
                 setLng(newLng);
               }}
