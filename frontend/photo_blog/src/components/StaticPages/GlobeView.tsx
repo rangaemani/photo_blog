@@ -35,7 +35,7 @@ function buildMarkers(photos: PhotoListItem[]): BuildResult {
     location: [lat, lng] as [number, number],
     size: 0.01 + (count / maxCount) * 0.02,
     id: `cluster-${i}`,
-    label: locationName ?? `${lat.toFixed(1)}, ${lng.toFixed(1)}`,
+    label: locationName ? locationName.split(',').slice(0, 2).join(', ') : `${lat.toFixed(1)}, ${lng.toFixed(1)}`,
   }));
   return { markers, clusters };
 }
